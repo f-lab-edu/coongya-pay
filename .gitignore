@@ -1,7 +1,7 @@
 HELP.md
 .gradle
 build/
-docs/
+study/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -39,3 +39,7 @@ out/
 
 ### macOS ###
 .DS_Store
+
+### secrets ###
+.env
+!.env.example
