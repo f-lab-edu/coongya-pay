@@ -7,7 +7,6 @@
 CREATE TABLE IF NOT EXISTS `user` (
     `id`         INT          NOT NULL AUTO_INCREMENT,
     `email`      VARCHAR(255) NOT NULL,
-    `password`   VARCHAR(255) NOT NULL COMMENT 'BCrypt 해시값',
     `name`       VARCHAR(100) NOT NULL,
     `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -17,6 +16,20 @@ CREATE TABLE IF NOT EXISTS `user` (
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `user_password` (
+    `id`                 INT          NOT NULL AUTO_INCREMENT,
+    `user_id`            INT          NOT NULL,
+    `password`           VARCHAR(255) NOT NULL COMMENT 'BCrypt 해시값',
+    `failed_login_count` INT          NOT NULL DEFAULT 0,
+    `locked_until`       DATETIME     NULL,
+    `created_at`         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_user_password_user_id` (`user_id`)
+) ENGINE = InnoDB
+DEFAULT CHARSET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
 
 CREATE TABLE IF NOT EXISTS `wallet` (
     `id`         INT           NOT NULL AUTO_INCREMENT,
