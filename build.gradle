@@ -32,6 +32,7 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	testImplementation platform('org.testcontainers:testcontainers-bom:1.20.4')
 	testImplementation 'org.testcontainers:mysql'
+	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:4.0.1'
 	testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
