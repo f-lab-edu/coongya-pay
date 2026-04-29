@@ -1,6 +1,7 @@
 package com.flab.coongyapay.user.controller;
 
 import com.flab.coongyapay.user.controller.dto.SignupRequest;
+import com.flab.coongyapay.user.service.SignupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,9 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UserController {
 
+    private final SignupService signupService;
+
     @PostMapping("/api/v1/signup")
     @ResponseStatus(HttpStatus.CREATED)
-    public Void signup(@Valid @RequestBody SignupRequest request) {
-        return null;
+    public void signup(@Valid @RequestBody SignupRequest request) {
+        signupService.signup(request);
     }
 }
