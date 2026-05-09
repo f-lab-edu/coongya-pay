@@ -1,6 +1,5 @@
 package com.flab.coongyapay.user.mapper.dto;
 
-import com.flab.coongyapay.user.domain.UserPassword;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,12 +17,4 @@ public class UserPasswordDto {
     private String password;
     private int failedLoginCount;
     private LocalDateTime lockedUntil;
-
-    public static UserPasswordDto fromDomain(UserPassword userPassword) {
-        return new UserPasswordDto(userPassword.getId(), userPassword.getUserId(), userPassword.getPasswordHash(), userPassword.getFailedLoginCount(), userPassword.getLockedUntil());
-    }
-
-    public UserPassword toDomain() {
-        return UserPassword.from(this.id, this.userId, this.password, this.failedLoginCount, this.lockedUntil);
-    }
 }

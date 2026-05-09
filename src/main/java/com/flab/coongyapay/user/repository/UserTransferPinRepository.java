@@ -1,5 +1,6 @@
 package com.flab.coongyapay.user.repository;
 
+import com.flab.coongyapay.user.assembler.UserTransferPinAssembler;
 import com.flab.coongyapay.user.domain.UserTransferPin;
 import com.flab.coongyapay.user.mapper.UserTransferPinMapper;
 import com.flab.coongyapay.user.mapper.dto.UserTransferPinDto;
@@ -11,10 +12,11 @@ import org.springframework.stereotype.Repository;
 public class UserTransferPinRepository {
 
     private final UserTransferPinMapper userTransferPinMapper;
+    private final UserTransferPinAssembler userTransferPinAssembler;
 
     public UserTransferPin save(UserTransferPin userTransferPin) {
-        UserTransferPinDto userTransferPinDto = UserTransferPinDto.fromDomain(userTransferPin);
+        UserTransferPinDto userTransferPinDto = userTransferPinAssembler.toDto(userTransferPin);
         userTransferPinMapper.insert(userTransferPinDto);
-        return userTransferPinDto.toDomain();
+        return userTransferPinAssembler.toDomain(userTransferPinDto);
     }
 }
