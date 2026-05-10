@@ -57,3 +57,14 @@ CREATE TABLE IF NOT EXISTS `user_transfer_pin` (
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `user_login_history` (
+    `id`	                INT	         NOT NULL AUTO_INCREMENT
+    `user_id`	            INT	         NOT NULL,
+    `success`	            BOOLEAN	     NOT NULL,
+    `failure_reason`	    VARCHAR(100) NULL,
+    `login_at`	            DATETIME	 NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `ip_address`	        VARCHAR(255) NOT NULL
+) ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_0900_ai_ci;
