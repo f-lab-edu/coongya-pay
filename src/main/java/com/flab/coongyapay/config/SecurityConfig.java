@@ -1,5 +1,10 @@
 package com.flab.coongyapay.config;
 
+import com.flab.coongyapay.auth.filter.JsonUsernamePasswordAuthenticationFilter;
+import com.flab.coongyapay.auth.handler.JsonAuthenticationFailureHandler;
+import com.flab.coongyapay.auth.handler.JsonAuthenticationSuccessHandler;
+import com.flab.coongyapay.auth.provider.CustomAuthenticationProvider;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,9 +18,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import tools.jackson.databind.ObjectMapper;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final CustomAuthenticationProvider customAuthenticationProvider;
+    private final JsonAuthenticationSuccessHandler jsonAuthenticationSuccessHandler;
+    private final JsonAuthenticationFailureHandler jsonAuthenticationFailureHandler;
+    private final ObjectMapper objectMapper;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -24,8 +36,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager() {
-        //FIXME CustomAuthenticationProvider 구현
-        return new ProviderManager();
+        return new ProviderManager(customAuthenticationProvider);
     }
 
     @Bean
@@ -39,13 +50,11 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter() {
-        UsernamePasswordAuthenticationFilter filter = new UsernamePasswordAuthenticationFilter();
+    public JsonUsernamePasswordAuthenticationFilter jsonUsernamePasswordAuthenticationFilter() {
+        JsonUsernamePasswordAuthenticationFilter filter = new JsonUsernamePasswordAuthenticationFilter(objectMapper);
         filter.setAuthenticationManager(authenticationManager());
-        //FIXME CustomAuthenticationSuccessHandler 구현
-//        filter.setAuthenticationSuccessHandler();
-        //FIXME CustomAuthenticationFailureHandler 구현
-//        filter.setAuthenticationFailureHandler();
+        filter.setAuthenticationSuccessHandler(jsonAuthenticationSuccessHandler);
+        filter.setAuthenticationFailureHandler(jsonAuthenticationFailureHandler);
         return filter;
     }
 
@@ -66,7 +75,7 @@ public class SecurityConfig {
                         .maxSessionsPreventsLogin(false)
                         .sessionRegistry(sessionRegistry())
                 )
-                .addFilterAt(usernamePasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(jsonUsernamePasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
