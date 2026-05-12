@@ -6,12 +6,6 @@ import java.time.LocalDateTime;
 
 @Getter
 public class UserLoginHistory {
-
-    public enum FailureReason {
-        ACCOUNT_LOCKED,
-        INVALID_PASSWORD
-    }
-
     private Long id;
     private final Long userId;
     private boolean success;
