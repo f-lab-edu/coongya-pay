@@ -1,5 +1,6 @@
 package com.flab.coongyapay.user.mapper.dto;
 
+import com.flab.coongyapay.user.enums.LoginFailureReason;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,7 @@ public class UserLoginHistoryDto {
     private Long id;
     private Long userId;
     private boolean success;
-    private String failureReason;
+    private LoginFailureReason failureReason;
     private LocalDateTime loginAt;
     private String ipAddress;
 }
