@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 public class UserLoginHistory {
-    private Long id;
+    private final Long id;
     private final Long userId;
     private final boolean success;
     private final LoginFailureReason failureReason;

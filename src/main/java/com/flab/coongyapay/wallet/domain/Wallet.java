@@ -8,8 +8,8 @@ import java.math.BigDecimal;
 public class Wallet {
     private final Long id;
     private final Long userId;
-    private BigDecimal balance;
-    private long version;
+    private final BigDecimal balance;
+    private final long version;
 
     private Wallet(Long id, Long userId, BigDecimal balance, long version) {
         this.id = id;
