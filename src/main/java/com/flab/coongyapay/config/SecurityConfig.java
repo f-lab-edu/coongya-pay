@@ -4,6 +4,7 @@ import com.flab.coongyapay.auth.filter.JsonUsernamePasswordAuthenticationFilter;
 import com.flab.coongyapay.auth.handler.JsonAuthenticationFailureHandler;
 import com.flab.coongyapay.auth.handler.JsonAuthenticationSuccessHandler;
 import com.flab.coongyapay.auth.provider.CustomAuthenticationProvider;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +29,7 @@ public class SecurityConfig {
     private final JsonAuthenticationSuccessHandler jsonAuthenticationSuccessHandler;
     private final JsonAuthenticationFailureHandler jsonAuthenticationFailureHandler;
     private final ObjectMapper objectMapper;
+    private final Validator validator;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -51,7 +53,7 @@ public class SecurityConfig {
 
     @Bean
     public JsonUsernamePasswordAuthenticationFilter jsonUsernamePasswordAuthenticationFilter() {
-        JsonUsernamePasswordAuthenticationFilter filter = new JsonUsernamePasswordAuthenticationFilter(objectMapper);
+        JsonUsernamePasswordAuthenticationFilter filter = new JsonUsernamePasswordAuthenticationFilter(objectMapper, validator);
         filter.setAuthenticationManager(authenticationManager());
         filter.setAuthenticationSuccessHandler(jsonAuthenticationSuccessHandler);
         filter.setAuthenticationFailureHandler(jsonAuthenticationFailureHandler);
