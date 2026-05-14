@@ -11,7 +11,10 @@ public interface UserMapper {
 
     boolean existsByEmail(@Param("email") String email);
 
+    Optional<UserDto> findByEmail(@Param("email") String email);
+
     Optional<UserDto> findByEmailForUpdate(@Param("email") String email);
 
     void insert(UserDto userDto);
+
 }
