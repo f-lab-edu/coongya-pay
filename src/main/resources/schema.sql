@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `user_login_history` (
     `success`	            BOOLEAN	     NOT NULL,
     `failure_reason`	    VARCHAR(100) NULL,
     `login_at`	            DATETIME	 NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `ip_address`	        VARCHAR(255) NOT NULL
+    `ip_address`	        VARCHAR(255) NOT NULL,
     PRIMARY KEY (`id`),
     INDEX idx_user_id (`user_id`)
 ) ENGINE = InnoDB
