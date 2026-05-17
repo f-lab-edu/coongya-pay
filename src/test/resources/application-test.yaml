@@ -8,3 +8,5 @@ spring:
     init:
       mode: always
       continue-on-error: false
+  session:
+    store-type: none

@@ -6,8 +6,3 @@ mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   configuration:
     map-underscore-to-camel-case: true
-
-server:
-  servlet:
-    session:
-      timeout: 30m
