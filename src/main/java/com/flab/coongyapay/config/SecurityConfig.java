@@ -6,6 +6,7 @@ import com.flab.coongyapay.auth.handler.JsonAuthenticationSuccessHandler;
 import com.flab.coongyapay.auth.provider.CustomAuthenticationProvider;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +20,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.session.FindByIndexNameSessionRepository;
+import org.springframework.session.Session;
+import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 import tools.jackson.databind.ObjectMapper;
 
 @Configuration
@@ -41,8 +45,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SessionRegistry sessionRegistry() {
-        return new SessionRegistryImpl();
+    public SessionRegistry sessionRegistry(@Autowired(required = false) FindByIndexNameSessionRepository<? extends Session> sessionRepository) {
+        // Test 환경 fallback
+        if (sessionRepository == null) {
+            return new SessionRegistryImpl();
+        }
+        return new SpringSessionBackedSessionRegistry<>(sessionRepository);
     }
 
     @Bean
@@ -60,7 +68,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JsonUsernamePasswordAuthenticationFilter jsonUsernamePasswordAuthenticationFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JsonUsernamePasswordAuthenticationFilter jsonUsernamePasswordAuthenticationFilter, SessionRegistry sessionRegistry) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
@@ -74,7 +82,7 @@ public class SecurityConfig {
                         .sessionFixation(fixation -> fixation.changeSessionId())
                         .maximumSessions(1)
                         .maxSessionsPreventsLogin(false)
-                        .sessionRegistry(sessionRegistry())
+                        .sessionRegistry(sessionRegistry)
                 )
                 .addFilterAt(jsonUsernamePasswordAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
