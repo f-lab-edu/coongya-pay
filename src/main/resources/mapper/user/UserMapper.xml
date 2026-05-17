@@ -10,6 +10,13 @@
         )
     </select>
 
+    <select id="findByEmail" resultType="com.flab.coongyapay.user.mapper.dto.UserDto">
+        SELECT id, email, name
+        FROM user
+        WHERE email = #{email}
+        AND deleted_at IS NULL
+    </select>
+
     <select id="findByEmailForUpdate" resultType="com.flab.coongyapay.user.mapper.dto.UserDto">
         SELECT id, email, name
         FROM user

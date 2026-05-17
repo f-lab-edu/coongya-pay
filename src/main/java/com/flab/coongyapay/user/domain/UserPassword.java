@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
 public class UserPassword {
     private final Long id;
     private final Long userId;
-    private String passwordHash;
-    private int failedLoginCount;
-    private LocalDateTime lockedUntil;
+    private final String passwordHash;
+    private final int failedLoginCount;
+    private final LocalDateTime lockedUntil;
 
     private UserPassword(Long id, Long userId, String passwordHash, int failedLoginCount, LocalDateTime lockedUntil) {
         this.id = id;
@@ -28,9 +28,10 @@ public class UserPassword {
         return new UserPassword(id, userId, passwordHash, failedLoginCount, lockedUntil);
     }
 
+    public boolean isLockedAt(LocalDateTime localDateTime) {
+        return lockedUntil != null && lockedUntil.isAfter(localDateTime);
+    }
+
     //TODO 인증,회원정보변경 메서드 추가하기
-    //increaseFailedCount()
-    //lockFor()
-    //unlock()
     //changePassword()
 }

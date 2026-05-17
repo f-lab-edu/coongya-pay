@@ -15,22 +15,16 @@ class UserMapperTest {
     private UserMapper userMapper;
 
     @Test
-    void existsByEmail_이메일_없으면_false() {
-        boolean exists = userMapper.existsByEmail("user@example.com");
-        Assertions.assertThat(exists).isFalse();
-    }
-
-    @Test
-    void findByEmailForUpdate_이메일_없으면_Optional_empty() {
-        Optional<UserDto> userDtoOptional = userMapper.findByEmailForUpdate("user@example.com");
-        Assertions.assertThat(userDtoOptional).isEmpty();
-    }
-
-    @Test
     void insert_성공하면_id_자동채번() {
         UserDto userDto = new UserDto(null, "user@example.com", "김쿵야");
         userMapper.insert(userDto);
         Assertions.assertThat(userDto.getId()).isNotNull();
+    }
+
+    @Test
+    void existsByEmail_이메일_없으면_false() {
+        boolean exists = userMapper.existsByEmail("user@example.com");
+        Assertions.assertThat(exists).isFalse();
     }
 
     @Test
@@ -42,6 +36,28 @@ class UserMapperTest {
     }
 
     @Test
+    void findByEmail_이메일_없으면_Optional_empty() {
+        Optional<UserDto> userDtoOptional = userMapper.findByEmail("user@example.com");
+        Assertions.assertThat(userDtoOptional).isEmpty();
+    }
+
+    @Test
+    void findByEmail_이메일_있으면_row_반환() {
+        UserDto userDto = new UserDto(null, "user@example.com", "김쿵야");
+        userMapper.insert(userDto);
+        Optional<UserDto> userDtoOptional = userMapper.findByEmail(userDto.getEmail());
+        Assertions.assertThat(userDtoOptional).isPresent();
+        Assertions.assertThat(userDtoOptional.get().getEmail()).isEqualTo(userDto.getEmail());
+        Assertions.assertThat(userDtoOptional.get().getName()).isEqualTo(userDto.getName());
+    }
+
+    @Test
+    void findByEmailForUpdate_이메일_없으면_Optional_empty() {
+        Optional<UserDto> userDtoOptional = userMapper.findByEmailForUpdate("user@example.com");
+        Assertions.assertThat(userDtoOptional).isEmpty();
+    }
+
+    @Test
     void findByEmailForUpdate_이메일_있으면_row_반환() {
         UserDto userDto = new UserDto(null, "user@example.com", "김쿵야");
         userMapper.insert(userDto);
@@ -50,4 +66,5 @@ class UserMapperTest {
         Assertions.assertThat(userDtoOptional.get().getEmail()).isEqualTo(userDto.getEmail());
         Assertions.assertThat(userDtoOptional.get().getName()).isEqualTo(userDto.getName());
     }
+
 }

@@ -20,6 +20,10 @@ public class UserRepository {
         return userMapper.existsByEmail(email);
     }
 
+    public Optional<User> findByEmail(String email) {
+        return userMapper.findByEmail(email).map(userAssembler::toDomain);
+    }
+
     public Optional<User> findByEmailForUpdate(String email) {
         return userMapper.findByEmailForUpdate(email).map(userAssembler::toDomain);
     }
