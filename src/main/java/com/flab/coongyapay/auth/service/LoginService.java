@@ -22,7 +22,7 @@ public class LoginService {
 
     @Transactional
     public void loginFail(Long userId, String ipAddress, LoginFailureReason loginFailureReason) {
-        if (LoginFailureReason.ACCOUNT_LOCKED.equals(loginFailureReason)) {
+        if (LoginFailureReason.ACCOUNT_LOCKED == loginFailureReason) {
             userLoginHistoryRepository.save(UserLoginHistory.failure(userId, loginFailureReason, ipAddress));
             return;
         }
