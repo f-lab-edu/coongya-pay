@@ -18,7 +18,13 @@ public enum ErrorCode {
     INVALID_NAME_LENGTH("INVALID_NAME_LENGTH", HttpStatus.BAD_REQUEST, "이름은 최소 1자, 최대 30자까지 입력할 수 있습니다."),
     INVALID_NAME_FORMAT("INVALID_NAME_FORMAT", HttpStatus.BAD_REQUEST, "이름은 한글 또는 영문 대/소문자만 입력할 수 있습니다. 영문에만 공백 입력이 가능합니다."),
     INVALID_TRANSFER_PIN_FORMAT("INVALID_TRANSFER_PIN_FORMAT", HttpStatus.BAD_REQUEST, "송금 비밀번호는 숫자 6자리를 입력해야 합니다."),
+
+    //Duplicate Email
     DUPLICATE_EMAIL("DUPLICATE_EMAIL", HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
+
+    //Authentication
+    LOGIN_FAILED("LOGIN_FAILED", HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호를 확인해주세요."),
+    ACCOUNT_LOCKED("ACCOUNT_LOCKED", HttpStatus.UNAUTHORIZED, "로그인 5회 실패로 계정이 잠겼습니다. 30분 후에 다시 시도해주세요."),
 
     //KYC
     KYC_VERIFICATION_FAILED("KYC_VERIFICATION_FAILED", HttpStatus.BAD_REQUEST, "본인 인증에 실패했습니다."),

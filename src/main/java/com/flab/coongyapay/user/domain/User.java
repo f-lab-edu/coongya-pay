@@ -5,8 +5,8 @@ import lombok.Getter;
 @Getter
 public class User {
     private final Long id;
-    private String email;
-    private String name;
+    private final String email;
+    private final String name;
 
     private User(Long id, String email, String name) {
         this.id = id;

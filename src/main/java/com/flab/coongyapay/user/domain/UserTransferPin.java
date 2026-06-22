@@ -8,9 +8,9 @@ import java.time.LocalDateTime;
 public class UserTransferPin {
     private final Long id;
     private final Long userId;
-    private String transferPinHash;
-    private int failedTransferPinCount;
-    private LocalDateTime lockedUntil;
+    private final String transferPinHash;
+    private final int failedTransferPinCount;
+    private final LocalDateTime lockedUntil;
 
     private UserTransferPin(Long id, Long userId, String transferPinHash, int failedTransferPinCount, LocalDateTime lockedUntil) {
         this.id = id;

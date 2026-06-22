@@ -8,3 +8,14 @@ spring:
     init:
       mode: always
       continue-on-error: false
+  data:
+    redis:
+      host: localhost
+      port: ${REDIS_PORT:6379}
+  session:
+    store-type: redis
+    timeout: 30m
+    redis:
+      flush-mode: on_save
+      namespace: coongyapay:session
+      repository-type: indexed
