@@ -29,7 +29,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String email = authentication.getName();
-        String password = authentication.getCredentials().toString();
+        String password = String.valueOf(authentication.getCredentials());
         String ipAddress = extractIpAddress(authentication);
 
         //1. 회원 조회
