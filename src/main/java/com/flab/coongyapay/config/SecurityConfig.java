@@ -3,12 +3,14 @@ package com.flab.coongyapay.config;
 import com.flab.coongyapay.auth.filter.JsonUsernamePasswordAuthenticationFilter;
 import com.flab.coongyapay.auth.handler.JsonAuthenticationFailureHandler;
 import com.flab.coongyapay.auth.handler.JsonAuthenticationSuccessHandler;
+import com.flab.coongyapay.auth.handler.JsonLogoutSuccessHandler;
 import com.flab.coongyapay.auth.provider.CustomAuthenticationProvider;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -19,6 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
@@ -31,6 +34,7 @@ public class SecurityConfig {
 
     private final JsonAuthenticationSuccessHandler jsonAuthenticationSuccessHandler;
     private final JsonAuthenticationFailureHandler jsonAuthenticationFailureHandler;
+    private final JsonLogoutSuccessHandler jsonLogoutSuccessHandler;
     private final ObjectMapper objectMapper;
     private final Validator validator;
 
@@ -84,7 +88,12 @@ public class SecurityConfig {
                         .maxSessionsPreventsLogin(false)
                         .sessionRegistry(sessionRegistry)
                 )
-                .addFilterAt(jsonUsernamePasswordAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterAt(jsonUsernamePasswordAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .logout(logout -> logout
+                        .logoutRequestMatcher(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/api/v1/logout"))
+                        .logoutSuccessHandler(jsonLogoutSuccessHandler)
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true));
 
         return http.build();
     }
