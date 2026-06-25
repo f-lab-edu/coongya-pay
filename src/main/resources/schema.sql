@@ -70,3 +70,17 @@ CREATE TABLE IF NOT EXISTS `user_login_history` (
 ) ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `bank_account` (
+    `id`                  INT          NOT NULL AUTO_INCREMENT,
+    `user_id`             INT          NOT NULL,
+    `bank_code`           VARCHAR(100) NOT NULL COMMENT '금융결제원 은행코드',
+    `account_number`      VARCHAR(100) NOT NULL,
+    `account_holder_name` VARCHAR(100) NOT NULL,
+    `registered_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `deleted_at`          DATETIME     NULL,
+    PRIMARY KEY (`id`),
+    INDEX idx_bank_account_user_id (`user_id`)
+) ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_0900_ai_ci;

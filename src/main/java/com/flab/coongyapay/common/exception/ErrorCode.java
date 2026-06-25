@@ -25,10 +25,16 @@ public enum ErrorCode {
     //Authentication
     LOGIN_FAILED("LOGIN_FAILED", HttpStatus.UNAUTHORIZED, "이메일 또는 비밀번호를 확인해주세요."),
     ACCOUNT_LOCKED("ACCOUNT_LOCKED", HttpStatus.UNAUTHORIZED, "로그인 5회 실패로 계정이 잠겼습니다. 30분 후에 다시 시도해주세요."),
+    UNAUTHORIZED("UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "로그인해주세요."),
 
     //KYC
     KYC_VERIFICATION_FAILED("KYC_VERIFICATION_FAILED", HttpStatus.BAD_REQUEST, "본인 인증에 실패했습니다."),
     KYC_SYSTEM_UNAVAILABLE("KYC_SYSTEM_UNAVAILABLE", HttpStatus.SERVICE_UNAVAILABLE, "KYC 시스템에 일시적인 장애가 발생했습니다."),
+
+    //Bank Account
+    INVALID_ACCOUNT_NUMBER_FORMAT("INVALID_ACCOUNT_NUMBER_FORMAT", HttpStatus.BAD_REQUEST, "계좌번호는 7자리 이상, 15자리 이하의 숫자만 입력해야 합니다."),
+    DUPLICATE_ACCOUNT("DUPLICATE_ACCOUNT", HttpStatus.BAD_REQUEST, "이미 등록된 계좌입니다."),
+    ACCOUNT_COUNT_LIMIT_EXCEEDED("ACCOUNT_COUNT_LIMIT_EXCEEDED", HttpStatus.BAD_REQUEST, "계좌는 최대 10개까지 등록할 수 있습니다."),
 
     //Internal Server Error
     INTERNAL_SERVER_ERROR("INTERNAL_SERVER_ERROR", HttpStatus.INTERNAL_SERVER_ERROR, "내부 서버 오류입니다.");
