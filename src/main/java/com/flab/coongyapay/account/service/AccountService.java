@@ -1,5 +1,6 @@
 package com.flab.coongyapay.account.service;
 
+import com.flab.coongyapay.account.controller.dto.AccountRegisterRequest;
 import com.flab.coongyapay.account.domain.BankAccount;
 import com.flab.coongyapay.account.repository.BankAccountRepository;
 import com.flab.coongyapay.bank.BankClient;
@@ -13,15 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AccountService {
 
-    private static final int MAX_ACCOUNT_LIMIT = 10;
+    private static final int MAX_ACCOUNT_LIMIT = 10; // 등록 가능한 활성 계좌수
 
     private final BankAccountRepository bankAccountRepository;
     private final BankClient bankClient;
 
     @Transactional
-    public void register(Long userId, String bankCode, String accountNumber, String accountHolderName) throws BusinessException {
+    public void register(Long userId, AccountRegisterRequest request) throws BusinessException {
         // 1. 중복 계좌 검증
-        boolean exists = bankAccountRepository.existsActiveByUserIdAndAccount(userId, bankCode, accountNumber);
+        boolean exists = bankAccountRepository.existsActiveByUserIdAndAccount(userId, request.getBankCode(), request.getAccountNumber());
         if (exists) {
             throw new BusinessException(ErrorCode.DUPLICATE_ACCOUNT);
         }
@@ -33,10 +34,10 @@ public class AccountService {
         }
 
         // 3. 은행 API 연동
-        bankClient.verify(bankCode, accountNumber, accountHolderName);
+        bankClient.verify(request.getBankCode(), request.getAccountNumber(), request.getAccountHolderName());
 
         // 4. 계좌 등록
-        bankAccountRepository.save(BankAccount.create(userId, bankCode, accountNumber, accountHolderName));
+        bankAccountRepository.save(BankAccount.create(userId, request.getBankCode(), request.getAccountNumber(), request.getAccountHolderName()));
     }
     
 }
