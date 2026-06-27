@@ -5,6 +5,7 @@ import com.flab.coongyapay.account.controller.dto.AccountResponse;
 import com.flab.coongyapay.account.repository.BankAccountRepository;
 import com.flab.coongyapay.bank.BankClient;
 import com.flab.coongyapay.common.exception.BusinessException;
+import com.flab.coongyapay.common.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,5 +35,13 @@ public class AccountService {
                 .map(AccountResponse::from)
                 .collect(Collectors.toList());
     }
-    
+
+    @Transactional
+    public void deleteAccount(Long id, Long userId) {
+        // 1. 삭제 대상 계좌 조회
+        bankAccountRepository.findActiveByIdAndUserId(id, userId).orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
+
+        // 2. 계좌 삭제
+        bankAccountRepository.softDelete(id, userId);
+    }
 }

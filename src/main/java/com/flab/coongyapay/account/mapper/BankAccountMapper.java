@@ -17,4 +17,8 @@ public interface BankAccountMapper {
     Optional<BankAccountDto> findActiveByUserIdAndAccountForUpdate(@Param("userId") Long userId, @Param("bankCode") String bankCode, @Param("accountNumber") String accountNumber);
 
     List<BankAccountDto> findActiveByUserId(@Param("userId") Long userId);
+
+    Optional<BankAccountDto> findActiveByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
+
+    void softDelete(@Param("id") Long id, @Param("userId") Long userId);
 }

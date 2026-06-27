@@ -28,4 +28,9 @@ public class AccountController {
     public List<AccountResponse> getAccounts(@AuthenticationPrincipal CustomUserDetails userDetails) {
         return accountService.getAccounts(userDetails.getUser().getId());
     }
+
+    @DeleteMapping("/api/v1/accounts/{id}")
+    public void delete(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
+        accountService.deleteAccount(id, userDetails.getUser().getId());
+    }
 }
