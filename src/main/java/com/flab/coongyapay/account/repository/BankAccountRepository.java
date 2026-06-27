@@ -7,7 +7,9 @@ import com.flab.coongyapay.account.mapper.dto.BankAccountDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -28,5 +30,11 @@ public class BankAccountRepository {
 
     public Optional<BankAccount> findActiveByUserIdAndAccountForUpdate(Long userId, String bankCode, String accountNumber) {
         return bankAccountMapper.findActiveByUserIdAndAccountForUpdate(userId, bankCode, accountNumber).map(bankAccountAssembler::toDomain);
+    }
+
+    public List<BankAccount> findActiveByUserId(Long userId) {
+        return bankAccountMapper.findActiveByUserId(userId).stream()
+                .map(bankAccountAssembler::toDomain)
+                .collect(Collectors.toList());
     }
 }
