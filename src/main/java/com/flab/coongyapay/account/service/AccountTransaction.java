@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class AccountTransaction {
@@ -20,8 +22,8 @@ public class AccountTransaction {
     @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void persistRegister(Long userId, String bankCode, String accountNumber, String accountHolderName) {
         // 1. 중복 계좌 검증
-        boolean exists = bankAccountRepository.existsActiveByUserIdAndAccount(userId, bankCode, accountNumber);
-        if (exists) {
+        Optional<BankAccount> existingAccount = bankAccountRepository.findActiveByUserIdAndAccountForUpdate(userId, bankCode, accountNumber);
+        if (existingAccount.isPresent()) {
             throw new BusinessException(ErrorCode.DUPLICATE_ACCOUNT);
         }
 

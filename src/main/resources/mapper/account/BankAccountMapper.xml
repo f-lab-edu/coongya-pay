@@ -9,22 +9,21 @@
         VALUES (#{userId}, #{bankCode}, #{accountNumber}, #{accountHolderName})
     </insert>
 
-    <select id="existsActiveByUserIdAndAccount" resultType="boolean">
-        SELECT EXISTS (
-            SELECT 1
-            FROM bank_account
-            WHERE user_id = #{userId}
-            AND bank_code = #{bankCode}
-            AND account_number = #{accountNumber}
-            AND deleted_at IS NULL
-        )
-    </select>
-
     <select id="countActiveByUserId" resultType="int">
         SELECT COUNT(*)
         FROM bank_account
         WHERE user_id = #{userId}
         AND deleted_at IS NULL
+    </select>
+
+    <select id="findActiveByUserIdAndAccountForUpdate" resultType="com.flab.coongyapay.account.mapper.dto.BankAccountDto">
+        SELECT *
+        FROM bank_account
+        WHERE user_id = #{userId}
+          AND bank_code = #{bankCode}
+          AND account_number = #{accountNumber}
+          AND deleted_at IS NULL
+        FOR UPDATE
     </select>
 
 </mapper>

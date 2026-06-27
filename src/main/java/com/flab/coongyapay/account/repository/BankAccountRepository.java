@@ -7,6 +7,8 @@ import com.flab.coongyapay.account.mapper.dto.BankAccountDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 @RequiredArgsConstructor
 public class BankAccountRepository {
@@ -20,11 +22,11 @@ public class BankAccountRepository {
         return bankAccountAssembler.toDomain(dto);
     }
 
-    public boolean existsActiveByUserIdAndAccount(Long userId, String bankCode, String accountNumber) {
-        return bankAccountMapper.existsActiveByUserIdAndAccount(userId, bankCode, accountNumber);
-    }
-
     public int countActiveByUserId(Long userId) {
         return bankAccountMapper.countActiveByUserId(userId);
+    }
+
+    public Optional<BankAccount> findActiveByUserIdAndAccountForUpdate(Long userId, String bankCode, String accountNumber) {
+        return bankAccountMapper.findActiveByUserIdAndAccountForUpdate(userId, bankCode, accountNumber).map(bankAccountAssembler::toDomain);
     }
 }
