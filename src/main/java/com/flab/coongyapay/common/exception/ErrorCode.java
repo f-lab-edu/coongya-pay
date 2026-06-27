@@ -36,6 +36,9 @@ public enum ErrorCode {
     DUPLICATE_ACCOUNT("DUPLICATE_ACCOUNT", HttpStatus.BAD_REQUEST, "이미 등록된 계좌입니다."),
     ACCOUNT_COUNT_LIMIT_EXCEEDED("ACCOUNT_COUNT_LIMIT_EXCEEDED", HttpStatus.BAD_REQUEST, "계좌는 최대 10개까지 등록할 수 있습니다."),
 
+    //Bank
+    BANK_SYSTEM_UNAVAILABLE("BANK_SYSTEM_UNAVAILABLE", HttpStatus.SERVICE_UNAVAILABLE, "은행 시스템에 일시적인 장애가 발생했습니다."),
+
     //Internal Server Error
     INTERNAL_SERVER_ERROR("INTERNAL_SERVER_ERROR", HttpStatus.INTERNAL_SERVER_ERROR, "내부 서버 오류입니다.");
 
