@@ -79,8 +79,10 @@ CREATE TABLE IF NOT EXISTS `bank_account` (
     `account_holder_name` VARCHAR(100) NOT NULL,
     `registered_at`       DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `deleted_at`          DATETIME     NULL,
+    `active_flag`         TINYINT GENERATED ALWAYS AS (IF(`deleted_at` IS NULL, 1, NULL)) VIRTUAL,
     PRIMARY KEY (`id`),
-    INDEX idx_bank_account_user_id (`user_id`)
+    INDEX idx_bank_account_user_id (`user_id`),
+    UNIQUE KEY uk_active_bank_account (`user_id`, `bank_code`, `account_number`, `active_flag`)
 ) ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_0900_ai_ci;
