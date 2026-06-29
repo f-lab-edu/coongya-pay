@@ -14,7 +14,7 @@ public interface BankAccountMapper {
 
     int countActiveByUserId(@Param("userId") Long userId);
 
-    Optional<BankAccountDto> findActiveByUserIdAndAccountForUpdate(@Param("userId") Long userId, @Param("bankCode") String bankCode, @Param("accountNumber") String accountNumber);
+    boolean existsActiveByUserIdAndAccount(@Param("userId") Long userId, @Param("bankCode") String bankCode, @Param("accountNumber") String accountNumber);
 
     List<BankAccountDto> findActiveByUserId(@Param("userId") Long userId);
 

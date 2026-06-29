@@ -28,8 +28,8 @@ public class BankAccountRepository {
         return bankAccountMapper.countActiveByUserId(userId);
     }
 
-    public Optional<BankAccount> findActiveByUserIdAndAccountForUpdate(Long userId, String bankCode, String accountNumber) {
-        return bankAccountMapper.findActiveByUserIdAndAccountForUpdate(userId, bankCode, accountNumber).map(bankAccountAssembler::toDomain);
+    public boolean existsActiveByUserIdAndAccount(Long userId, String bankCode, String accountNumber) {
+        return bankAccountMapper.existsActiveByUserIdAndAccount(userId, bankCode, accountNumber);
     }
 
     public List<BankAccount> findActiveByUserId(Long userId) {
