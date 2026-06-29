@@ -32,6 +32,7 @@
         FROM bank_account
         WHERE user_id = #{userId}
           AND deleted_at IS NULL
+        <!-- TODO 거래 구현 후 최근 거래 순 정렬 추가 -->
         ORDER BY registered_at DESC
     </select>
 
