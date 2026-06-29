@@ -33,4 +33,8 @@ public class UserRepository {
         userMapper.insert(userDto);
         return userAssembler.toDomain(userDto);
     }
+
+    public Long findByIdForUpdate(Long id) {
+        return userMapper.findByIdForUpdate(id);
+    }
 }
