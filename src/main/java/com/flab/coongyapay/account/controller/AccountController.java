@@ -31,6 +31,6 @@ public class AccountController {
 
     @DeleteMapping("/api/v1/accounts/{id}")
     public void delete(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long id) {
-        accountService.deleteAccount(id, userDetails.getUser().getId());
+        accountService.delete(id, userDetails.getUser().getId());
     }
 }

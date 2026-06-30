@@ -6,6 +6,9 @@ import java.time.LocalDateTime;
 
 @Getter
 public class BankAccount {
+
+    public static final int MAX_ACCOUNT_LIMIT = 10; // 등록 가능한 활성 계좌수
+
     private final Long id;
     private final Long userId;
     private final String bankCode;

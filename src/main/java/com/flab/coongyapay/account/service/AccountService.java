@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.flab.coongyapay.account.domain.BankAccount.MAX_ACCOUNT_LIMIT;
+
 @Service
 @RequiredArgsConstructor
 public class AccountService {
@@ -21,11 +23,22 @@ public class AccountService {
     private final AccountTransaction accountTransaction;
     private final BankAccountRepository bankAccountRepository;
 
-    public void register(Long userId, AccountRegisterRequest request) throws BusinessException {
-        // 1. 은행 API 연동
+    public void register(Long userId, AccountRegisterRequest request) {
+        // 1. 중복 계좌 사전 검증
+        if (bankAccountRepository.existsActiveByUserIdAndAccount(userId, request.getBankCode(), request.getAccountNumber())) {
+            throw new BusinessException(ErrorCode.DUPLICATE_ACCOUNT);
+        }
+
+        // 2. 최대 등록 계좌수 사전 검증
+        int count = bankAccountRepository.countActiveByUserId(userId);
+        if (count >= MAX_ACCOUNT_LIMIT) {
+            throw new BusinessException(ErrorCode.ACCOUNT_COUNT_LIMIT_EXCEEDED);
+        }
+
+        // 3. 은행 API 연동
         bankClient.verify(request.getBankCode(), request.getAccountNumber(), request.getAccountHolderName());
 
-        // 2. 계좌 등록
+        // 4. 계좌 등록
         accountTransaction.persistRegister(userId, request.getBankCode(), request.getAccountNumber(), request.getAccountHolderName());
     }
 
@@ -37,7 +50,7 @@ public class AccountService {
     }
 
     @Transactional
-    public void deleteAccount(Long id, Long userId) {
+    public void delete(Long id, Long userId) {
         // 1. 삭제 대상 계좌 조회
         bankAccountRepository.findActiveByIdAndUserId(id, userId).orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
 

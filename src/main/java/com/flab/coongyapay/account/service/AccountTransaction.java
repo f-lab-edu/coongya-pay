@@ -11,11 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.flab.coongyapay.account.domain.BankAccount.MAX_ACCOUNT_LIMIT;
+
 @Service
 @RequiredArgsConstructor
 public class AccountTransaction {
-
-    private static final int MAX_ACCOUNT_LIMIT = 10; // 등록 가능한 활성 계좌수
 
     private final UserRepository userRepository;
     private final BankAccountRepository bankAccountRepository;
