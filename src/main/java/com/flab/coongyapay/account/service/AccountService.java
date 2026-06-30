@@ -51,10 +51,9 @@ public class AccountService {
 
     @Transactional
     public void delete(Long id, Long userId) {
-        // 1. 삭제 대상 계좌 조회
-        bankAccountRepository.findActiveByIdAndUserId(id, userId).orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
-
-        // 2. 계좌 삭제
-        bankAccountRepository.softDelete(id, userId);
+        int affected = bankAccountRepository.softDelete(id, userId);
+        if (affected == 0) {
+            throw new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND);
+        }
     }
 }

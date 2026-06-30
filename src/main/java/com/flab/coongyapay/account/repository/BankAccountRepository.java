@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
@@ -38,11 +37,7 @@ public class BankAccountRepository {
                 .collect(Collectors.toList());
     }
 
-    public Optional<BankAccount> findActiveByIdAndUserId(Long id, Long userId) {
-        return bankAccountMapper.findActiveByIdAndUserId(id, userId).map(bankAccountAssembler::toDomain);
-    }
-
-    public void softDelete(Long id, Long userId) {
-        bankAccountMapper.softDelete(id, userId);
+    public int softDelete(Long id, Long userId) {
+        return bankAccountMapper.softDelete(id, userId);
     }
 }

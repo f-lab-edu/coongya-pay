@@ -36,14 +36,6 @@
         ORDER BY registered_at DESC
     </select>
 
-    <select id="findActiveByIdAndUserId" resultType="com.flab.coongyapay.account.mapper.dto.BankAccountDto">
-        SELECT id, user_id, bank_code, account_number, account_holder_name, registered_at, deleted_at
-        FROM bank_account
-        WHERE id = #{id}
-          AND user_id = #{userId}
-          AND deleted_at IS NULL
-    </select>
-
     <update id="softDelete">
         UPDATE bank_account
            SET deleted_at = NOW()
