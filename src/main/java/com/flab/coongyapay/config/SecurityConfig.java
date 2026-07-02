@@ -1,6 +1,7 @@
 package com.flab.coongyapay.config;
 
 import com.flab.coongyapay.auth.filter.JsonUsernamePasswordAuthenticationFilter;
+import com.flab.coongyapay.auth.handler.JsonAuthenticationEntryPoint;
 import com.flab.coongyapay.auth.handler.JsonAuthenticationFailureHandler;
 import com.flab.coongyapay.auth.handler.JsonAuthenticationSuccessHandler;
 import com.flab.coongyapay.auth.handler.JsonLogoutSuccessHandler;
@@ -72,7 +73,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JsonUsernamePasswordAuthenticationFilter jsonUsernamePasswordAuthenticationFilter, SessionRegistry sessionRegistry) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JsonUsernamePasswordAuthenticationFilter jsonUsernamePasswordAuthenticationFilter, SessionRegistry sessionRegistry, JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
@@ -81,6 +82,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/signup", "/api/v1/login").permitAll()
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jsonAuthenticationEntryPoint))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                         .sessionFixation(fixation -> fixation.changeSessionId())

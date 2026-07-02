@@ -30,4 +30,11 @@
         VALUES (#{email}, #{name})
     </insert>
 
+    <select id="findByIdForUpdate" resultType="long">
+        SELECT id
+        FROM user
+        WHERE id = #{id}
+        FOR UPDATE
+    </select>
+
 </mapper>

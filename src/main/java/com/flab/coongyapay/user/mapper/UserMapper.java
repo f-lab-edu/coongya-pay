@@ -17,4 +17,5 @@ public interface UserMapper {
 
     void insert(UserDto userDto);
 
+    Long findByIdForUpdate(@Param("id") Long id);
 }

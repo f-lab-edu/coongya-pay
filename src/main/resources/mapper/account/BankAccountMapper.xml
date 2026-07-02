@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.flab.coongyapay.account.mapper.BankAccountMapper">
+
+    <insert id="insert" parameterType="com.flab.coongyapay.account.mapper.dto.BankAccountDto"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO bank_account (user_id, bank_code, account_number, account_holder_name)
+        VALUES (#{userId}, #{bankCode}, #{accountNumber}, #{accountHolderName})
+    </insert>
+
+    <select id="countActiveByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM bank_account
+        WHERE user_id = #{userId}
+        AND deleted_at IS NULL
+    </select>
+
+    <select id="existsActiveByUserIdAndAccount" resultType="boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM bank_account
+            WHERE user_id = #{userId}
+              AND bank_code = #{bankCode}
+              AND account_number = #{accountNumber}
+              AND deleted_at IS NULL
+        )
+    </select>
+
+    <select id="findActiveByUserId" resultType="com.flab.coongyapay.account.mapper.dto.BankAccountDto">
+        SELECT id, user_id, bank_code, account_number, account_holder_name, registered_at, deleted_at
+        FROM bank_account
+        WHERE user_id = #{userId}
+          AND deleted_at IS NULL
+        <!-- TODO 거래 구현 후 최근 거래 순 정렬 추가 -->
+        ORDER BY registered_at DESC
+    </select>
+
+    <update id="softDelete">
+        UPDATE bank_account
+           SET deleted_at = NOW()
+        WHERE id = #{id}
+          AND user_id = #{userId}
+          AND deleted_at IS NULL
+    </update>
+
+</mapper>
