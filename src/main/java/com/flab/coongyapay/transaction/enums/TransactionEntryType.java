@@ -1,6 +1,6 @@
 package com.flab.coongyapay.transaction.enums;
 
-public enum EntryType {
+public enum TransactionEntryType {
     CREDIT,
     DEBIT
 }
