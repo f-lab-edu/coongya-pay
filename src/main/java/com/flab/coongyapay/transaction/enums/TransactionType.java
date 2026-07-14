@@ -1,4 +1,4 @@
-package com.flab.coongyapay.charge.enums;
+package com.flab.coongyapay.transaction.enums;
 
 public enum TransactionType {
     CHARGE,

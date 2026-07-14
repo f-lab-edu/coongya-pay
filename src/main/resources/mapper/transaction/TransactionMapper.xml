@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.flab.coongyapay.transaction.mapper.TransactionMapper">
+
+    <select id="findById" resultType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto">
+        SELECT id, wallet_id, transaction_type, parent_transaction_id, amount, status, remark, failure_reason, created_at, completed_at
+        FROM transaction
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO transaction (wallet_id, transaction_type, parent_transaction_id, amount, status, remark, failure_reason, completed_at)
+        VALUES (#{walletId}, #{transactionType}, #{parentTransactionId}, #{amount}, #{status}, #{remark}, #{failureReason}, #{completedAt})
+    </insert>
+
+</mapper>

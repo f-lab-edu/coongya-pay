@@ -1,8 +1,8 @@
-package com.flab.coongyapay.charge.domain;
+package com.flab.coongyapay.transaction.domain;
 
-import com.flab.coongyapay.charge.enums.TransactionFailureReason;
-import com.flab.coongyapay.charge.enums.TransactionStatus;
-import com.flab.coongyapay.charge.enums.TransactionType;
+import com.flab.coongyapay.transaction.enums.TransactionFailureReason;
+import com.flab.coongyapay.transaction.enums.TransactionStatus;
+import com.flab.coongyapay.transaction.enums.TransactionType;
 import com.flab.coongyapay.common.exception.BusinessException;
 import com.flab.coongyapay.common.exception.ErrorCode;
 import lombok.Getter;
