@@ -131,3 +131,21 @@ CREATE TABLE IF NOT EXISTS `transaction_entry` (
 ) ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_0900_ai_ci;
+
+CREATE TABLE IF NOT EXISTS `idempotency_key` (
+    `user_id`              INT          NOT NULL,
+    `endpoint`             VARCHAR(100) NOT NULL,
+    `idempotency_key`      VARCHAR(36)  NOT NULL,
+    `request_hash`         VARCHAR(64)  NOT NULL COMMENT '민감정보 제외 본문의 SHA-256 hex',
+    `status`               VARCHAR(20)  NOT NULL COMMENT 'PROCESSING,COMPLETED',
+    `response_http_status` INT          NULL,
+    `response_body`        TEXT         NULL,
+    `lease_expires_at`     DATETIME     NOT NULL COMMENT 'PROCESSING 점유 만료 시각(선점 시 now+120초)',
+    `expires_at`           DATETIME     NOT NULL COMMENT '보관 TTL(now+24시간), 정리 스케줄러 대상 판별',
+    `created_at`           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at`           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`user_id`, `endpoint`, `idempotency_key`),
+    INDEX `idx_idempotency_key_expires_at` (`expires_at`)
+) ENGINE = InnoDB
+    DEFAULT CHARSET = utf8mb4
+    COLLATE = utf8mb4_0900_ai_ci;
