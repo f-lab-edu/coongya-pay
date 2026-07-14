@@ -43,7 +43,7 @@ public enum ErrorCode {
     //Charge
     INVALID_IDEMPOTENCY_KEY("INVALID_IDEMPOTENCY_KEY", HttpStatus.BAD_REQUEST, "멱등키가 없거나 형식이 올바르지 않습니다."),
     IDEMPOTENCY_KEY_PROCESSING("IDEMPOTENCY_KEY_PROCESSING", HttpStatus.CONFLICT, "이전 요청이 처리 중입니다. 잠시 후 상태를 조회해주세요."),
-    IDEMPOTENCY_KEY_CONFLICT("IDEMPOTENCY_KEY_CONFLICT", HttpStatus.BAD_REQUEST, "동일한 멱등키로 다른 요청은 처리할 수 없습니다."),
+    IDEMPOTENCY_KEY_CONFLICT("IDEMPOTENCY_KEY_CONFLICT", HttpStatus.UNPROCESSABLE_CONTENT, "동일한 멱등키로 다른 요청은 처리할 수 없습니다."),
     INVALID_CHARGE_AMOUNT("INVALID_CHARGE_AMOUNT", HttpStatus.BAD_REQUEST, "충전 금액은 1원 이상 2,000,000원 이하여야 합니다."),
     INVALID_REMARK_LENGTH("INVALID_REMARK_LENGTH", HttpStatus.BAD_REQUEST, "거래 적요는 최소 1자, 최대 7자까지 입력할 수 있습니다."),
     INVALID_TRANSFER_PIN("INVALID_TRANSFER_PIN", HttpStatus.UNAUTHORIZED, "송금 비밀번호를 확인해주세요."),
