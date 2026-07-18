@@ -16,7 +16,6 @@
           AND idempotency_key = #{idempotencyKey}
     </select>
 
-
     <update id="reclaim">
         UPDATE idempotency_key
            SET lease_expires_at = DATE_ADD(NOW(), INTERVAL #{leaseSeconds} SECOND)
