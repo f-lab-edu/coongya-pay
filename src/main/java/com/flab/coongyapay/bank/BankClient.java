@@ -7,8 +7,13 @@ public interface BankClient {
      * @param bankCode
      * @param accountNumber
      * @param accountHolderName
-     * @throws com.flab.coongyapay.common.exception.BusinessException
-     *  - BANK_SYSTEM_UNAVAILABLE: 은행 시스템 장애
      */
     void verify(String bankCode, String accountNumber, String accountHolderName);
+
+    /**
+     * 출금 가능 여부 검증
+     * @param bankCode
+     * @param accountNumber
+     */
+    void validateWithdrawal(String bankCode, String accountNumber);
 }
