@@ -15,4 +15,6 @@ public interface TransactionMapper {
     Optional<TransactionDto> findById(@Param("id") Long id);
 
     BigDecimal sumInFlightChargeByWalletId(@Param("walletId") Long walletId);
+
+    Optional<TransactionDto> findChargeByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 }

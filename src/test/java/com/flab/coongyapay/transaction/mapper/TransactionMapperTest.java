@@ -3,6 +3,8 @@ package com.flab.coongyapay.transaction.mapper;
 import com.flab.coongyapay.transaction.enums.TransactionStatus;
 import com.flab.coongyapay.transaction.enums.TransactionType;
 import com.flab.coongyapay.transaction.mapper.dto.TransactionDto;
+import com.flab.coongyapay.wallet.mapper.WalletMapper;
+import com.flab.coongyapay.wallet.mapper.dto.WalletDto;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
@@ -16,6 +18,8 @@ class TransactionMapperTest {
 
     @Autowired
     private TransactionMapper transactionMapper;
+    @Autowired
+    private WalletMapper walletMapper;
 
     @Test
     void insert_성공하면_id_자동채번() {
@@ -94,6 +98,52 @@ class TransactionMapperTest {
         BigDecimal sumInFlightChargeByWalletId = transactionMapper.sumInFlightChargeByWalletId(dto.getWalletId()+1);
 
         Assertions.assertThat(sumInFlightChargeByWalletId).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void findChargeByIdAndUserId_사용자의_충전거래_반환() {
+        WalletDto walletDto = new WalletDto(null, 1L, BigDecimal.ZERO, 0);
+        walletMapper.insert(walletDto);
+
+        TransactionDto dto = getDto();
+        dto.setWalletId(walletDto.getId());
+        transactionMapper.insert(dto);
+        Optional<TransactionDto> chargeByIdAndUserId = transactionMapper.findChargeByIdAndUserId(dto.getId(), 1L);
+
+        Assertions.assertThat(chargeByIdAndUserId).isPresent();
+        Assertions.assertThat(chargeByIdAndUserId.get().getWalletId()).isEqualTo(dto.getWalletId());
+        Assertions.assertThat(chargeByIdAndUserId.get().getTransactionType()).isEqualTo(dto.getTransactionType());
+        Assertions.assertThat(chargeByIdAndUserId.get().getAmount()).isEqualByComparingTo(dto.getAmount());
+        Assertions.assertThat(chargeByIdAndUserId.get().getStatus()).isEqualTo(dto.getStatus());
+        Assertions.assertThat(chargeByIdAndUserId.get().getRemark()).isEqualTo(dto.getRemark());
+        Assertions.assertThat(chargeByIdAndUserId.get().getCreatedAt()).isNotNull();
+    }
+
+    @Test
+    void findChargeByIdAndUserId_다른_사용자의_충전거래_반환_안_함() {
+        WalletDto walletDto = new WalletDto(null, 1L, BigDecimal.ZERO, 0);
+        walletMapper.insert(walletDto);
+
+        TransactionDto dto = getDto();
+        dto.setWalletId(walletDto.getId());
+        transactionMapper.insert(dto);
+        Optional<TransactionDto> otherUserTransaction = transactionMapper.findChargeByIdAndUserId(dto.getId(), 2L);
+
+        Assertions.assertThat(otherUserTransaction).isNotPresent();
+    }
+
+    @Test
+    void findChargeByIdAndUserId_충전거래_아니면_반환_안_함() {
+        WalletDto walletDto = new WalletDto(null, 1L, BigDecimal.ZERO, 0);
+        walletMapper.insert(walletDto);
+
+        TransactionDto dto = getDto();
+        dto.setWalletId(walletDto.getId());
+        dto.setTransactionType(TransactionType.WITHDRAW.toString());
+        transactionMapper.insert(dto);
+        Optional<TransactionDto> userWithdrawalTransaction = transactionMapper.findChargeByIdAndUserId(dto.getId(), 1L);
+
+        Assertions.assertThat(userWithdrawalTransaction).isNotPresent();
     }
 
     private static TransactionDto getDto() {

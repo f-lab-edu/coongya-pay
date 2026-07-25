@@ -3,9 +3,9 @@ package com.flab.coongyapay.charge.controller;
 import com.flab.coongyapay.auth.userdetails.CustomUserDetails;
 import com.flab.coongyapay.charge.controller.dto.ChargeRequest;
 import com.flab.coongyapay.charge.controller.dto.ChargeResponse;
+import com.flab.coongyapay.charge.controller.dto.ChargeStatusResponse;
 import com.flab.coongyapay.charge.service.ChargeResult;
 import com.flab.coongyapay.charge.service.ChargeService;
-import com.flab.coongyapay.charge.service.ChargeTransaction;
 import com.flab.coongyapay.common.exception.BusinessException;
 import com.flab.coongyapay.common.exception.ErrorCode;
 import com.flab.coongyapay.transaction.enums.TransactionStatus;
@@ -14,10 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.util.UUID;
@@ -27,7 +24,6 @@ import java.util.UUID;
 public class ChargeController {
 
     private final ChargeService chargeService;
-    private final ChargeTransaction chargeTransaction;
 
     @PostMapping("/api/v1/charges")
     public ResponseEntity<?> charge(
@@ -54,7 +50,13 @@ public class ChargeController {
                 .body(responseBody);
     }
 
+    @GetMapping("/api/v1/charges/{chargeId}")
+    public ChargeStatusResponse getCharge(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable Long chargeId) {
+        return chargeService.getCharge(userDetails.getUser().getId(), chargeId);
+    }
+
     private void validateIdempotencyKey(String idempotencyKey) {
+
         if (idempotencyKey == null || idempotencyKey.isBlank()) {
             throw new BusinessException(ErrorCode.INVALID_IDEMPOTENCY_KEY);
         }

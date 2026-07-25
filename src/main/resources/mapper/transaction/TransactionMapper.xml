@@ -22,4 +22,14 @@
           AND transaction_type = 'CHARGE'
           AND status IN ('CREATED','WITHDRAWING','WITHDRAWN','DEPOSITING','UNKNOWN','COMPENSATING')
     </select>
+
+    <select id="findChargeByIdAndUserId" resultType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto">
+        SELECT t.id, t.wallet_id, t.transaction_type, t.parent_transaction_id, t.amount, t.status, t.remark, t.failure_reason, t.created_at, t.completed_at
+        FROM transaction t
+        JOIN wallet w
+          ON t.wallet_id = w.id
+        WHERE t.id = #{id}
+          AND w.user_id = #{userId}
+          AND t.transaction_type = 'CHARGE'
+    </select>
 </mapper>

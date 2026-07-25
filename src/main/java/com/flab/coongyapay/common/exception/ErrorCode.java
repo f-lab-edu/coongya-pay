@@ -52,6 +52,9 @@ public enum ErrorCode {
     BANK_MAINTENANCE("BANK_MAINTENANCE", HttpStatus.BAD_REQUEST, "은행 점검 시간(00:00~00:30)에는 송금할 수 없습니다."),
     WALLET_BALANCE_LIMIT_EXCEEDED("WALLET_BALANCE_LIMIT_EXCEEDED", HttpStatus.BAD_REQUEST, "페이머니 보유 한도(2,000,000원)를 초과할 수 없습니다."),
 
+    //Transaction
+    TRANSACTION_NOT_FOUND("TRANSACTION_NOT_FOUND", HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."),
+
     //Internal Server Error
     INTERNAL_SERVER_ERROR("INTERNAL_SERVER_ERROR", HttpStatus.INTERNAL_SERVER_ERROR, "내부 서버 오류입니다.");
 

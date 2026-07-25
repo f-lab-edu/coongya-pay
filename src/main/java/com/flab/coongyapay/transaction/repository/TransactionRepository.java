@@ -31,4 +31,8 @@ public class TransactionRepository {
     public BigDecimal sumInFlightChargeByWalletId(Long walletId) {
         return transactionMapper.sumInFlightChargeByWalletId(walletId);
     }
+
+    public Optional<Transaction> findChargeByIdAndUserId(Long id, Long userId) {
+        return transactionMapper.findChargeByIdAndUserId(id, userId).map(transactionAssembler::toDomain);
+    }
 }

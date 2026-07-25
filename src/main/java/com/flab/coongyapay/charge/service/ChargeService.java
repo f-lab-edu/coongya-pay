@@ -5,17 +5,21 @@ import com.flab.coongyapay.account.repository.BankAccountRepository;
 import com.flab.coongyapay.bank.BankClient;
 import com.flab.coongyapay.bank.BankMaintenancePolicy;
 import com.flab.coongyapay.charge.controller.dto.ChargeRequest;
+import com.flab.coongyapay.charge.controller.dto.ChargeStatusResponse;
 import com.flab.coongyapay.common.exception.BusinessException;
 import com.flab.coongyapay.common.exception.ErrorCode;
 import com.flab.coongyapay.common.exception.ErrorResponse;
 import com.flab.coongyapay.common.util.RequestHashUtil;
 import com.flab.coongyapay.idempotency.service.ClaimResult;
 import com.flab.coongyapay.idempotency.service.IdempotencyService;
+import com.flab.coongyapay.transaction.domain.Transaction;
+import com.flab.coongyapay.transaction.repository.TransactionRepository;
 import com.flab.coongyapay.user.service.UserTransferPinVerifier;
 import com.flab.coongyapay.wallet.domain.Wallet;
 import com.flab.coongyapay.wallet.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
@@ -36,6 +40,7 @@ public class ChargeService {
     private final BankClient bankClient;
     private final ChargeTransaction chargeTransaction;
     private final ObjectMapper objectMapper;
+    private final TransactionRepository transactionRepository;
 
     public ChargeResult charge(Long userId, String userName, String idempotencyKey, ChargeRequest request) {
         // 1. 멱등키 선점
@@ -89,6 +94,14 @@ public class ChargeService {
             cacheFailure(userId, idempotencyKey, e);
             throw e;
         }
+    }
+
+    @Transactional(readOnly = true)
+    public ChargeStatusResponse getCharge(Long userId, Long chargeId) {
+        Transaction chargeTransaction = transactionRepository.findChargeByIdAndUserId(chargeId, userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRANSACTION_NOT_FOUND));
+
+        return ChargeStatusResponse.from(chargeTransaction);
     }
 
     private String canonicalize(ChargeRequest request) {
