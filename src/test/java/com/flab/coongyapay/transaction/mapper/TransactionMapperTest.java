@@ -147,6 +147,6 @@ class TransactionMapperTest {
     }
 
     private static TransactionDto getDto() {
-        return new TransactionDto(null, 1L, TransactionType.CHARGE.toString(), null, BigDecimal.ONE, TransactionStatus.CREATED.toString(), "김쿵야", null, null, null);
+        return new TransactionDto(null, 1L, 1L, TransactionType.CHARGE.toString(), null, BigDecimal.ONE, TransactionStatus.CREATED.toString(), "김쿵야", null, null, null);
     }
 }

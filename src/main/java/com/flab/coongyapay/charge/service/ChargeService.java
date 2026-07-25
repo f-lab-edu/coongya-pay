@@ -89,7 +89,7 @@ public class ChargeService {
         // 4. 충전 접수 커밋
         try {
             String remark = resolveRemark(request.getRemark(), userName);
-            return chargeTransaction.commitReceipt(userId, ENDPOINT, idempotencyKey, request.getAmount(), remark);
+            return chargeTransaction.commitReceipt(userId, ENDPOINT, idempotencyKey, bankAccount.getId(), request.getAmount(), remark);
         } catch (BusinessException e) {
             cacheFailure(userId, idempotencyKey, e);
             throw e;

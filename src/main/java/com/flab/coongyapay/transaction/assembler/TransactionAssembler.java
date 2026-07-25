@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component;
 public class TransactionAssembler {
 
     public TransactionDto toDto(Transaction domain) {
-        return new TransactionDto(domain.getId(), domain.getWalletId(), domain.getTransactionType().name(), domain.getParentTransactionId(), domain.getAmount(), domain.getStatus().name(), domain.getRemark(), domain.getFailureReason() == null ? null : domain.getFailureReason().name(), domain.getCreatedAt(), domain.getCompletedAt());
+        return new TransactionDto(domain.getId(), domain.getWalletId(), domain.getAccountId(), domain.getTransactionType().name(), domain.getParentTransactionId(), domain.getAmount(), domain.getStatus().name(), domain.getRemark(), domain.getFailureReason() == null ? null : domain.getFailureReason().name(), domain.getCreatedAt(), domain.getCompletedAt());
     }
 
     public Transaction toDomain(TransactionDto dto) {
-        return Transaction.from(dto.getId(), dto.getWalletId(), TransactionType.valueOf(dto.getTransactionType()), dto.getParentTransactionId(), dto.getAmount(), TransactionStatus.valueOf(dto.getStatus()), dto.getRemark(), dto.getFailureReason() == null ? null : TransactionFailureReason.valueOf(dto.getFailureReason()), dto.getCreatedAt(), dto.getCompletedAt());
+        return Transaction.from(dto.getId(), dto.getWalletId(), dto.getAccountId(), TransactionType.valueOf(dto.getTransactionType()), dto.getParentTransactionId(), dto.getAmount(), TransactionStatus.valueOf(dto.getStatus()), dto.getRemark(), dto.getFailureReason() == null ? null : TransactionFailureReason.valueOf(dto.getFailureReason()), dto.getCreatedAt(), dto.getCompletedAt());
     }
 }

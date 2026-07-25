@@ -42,6 +42,10 @@ public class BankAccountRepository {
         return bankAccountMapper.findActiveByIdAndUserId(id, userId).map(bankAccountAssembler::toDomain);
     }
 
+    public Optional<BankAccount> findById(Long id) {
+        return bankAccountMapper.findById(id).map(bankAccountAssembler::toDomain);
+    }
+
     public int softDelete(Long id, Long userId) {
         return bankAccountMapper.softDelete(id, userId);
     }

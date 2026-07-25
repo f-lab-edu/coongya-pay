@@ -3,16 +3,20 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.flab.coongyapay.transaction.mapper.TransactionMapper">
 
+    <sql id="columns">
+        id, wallet_id, account_id, transaction_type, parent_transaction_id, amount, status, remark, failure_reason, created_at, completed_at
+    </sql>
+
     <select id="findById" resultType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto">
-        SELECT id, wallet_id, transaction_type, parent_transaction_id, amount, status, remark, failure_reason, created_at, completed_at
+        SELECT <include refid="columns"/>
         FROM transaction
         WHERE id = #{id}
     </select>
 
     <insert id="insert" parameterType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto"
             useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO transaction (wallet_id, transaction_type, parent_transaction_id, amount, status, remark, failure_reason, completed_at)
-        VALUES (#{walletId}, #{transactionType}, #{parentTransactionId}, #{amount}, #{status}, #{remark}, #{failureReason}, #{completedAt})
+        INSERT INTO transaction (wallet_id, account_id, transaction_type, parent_transaction_id, amount, status, remark, failure_reason, completed_at)
+        VALUES (#{walletId}, #{accountId}, #{transactionType}, #{parentTransactionId}, #{amount}, #{status}, #{remark}, #{failureReason}, #{completedAt})
     </insert>
 
     <select id="sumInFlightChargeByWalletId" resultType="java.math.BigDecimal">
@@ -24,7 +28,7 @@
     </select>
 
     <select id="findChargeByIdAndUserId" resultType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto">
-        SELECT t.id, t.wallet_id, t.transaction_type, t.parent_transaction_id, t.amount, t.status, t.remark, t.failure_reason, t.created_at, t.completed_at
+        SELECT t.id, t.wallet_id, t.account_id, t.transaction_type, t.parent_transaction_id, t.amount, t.status, t.remark, t.failure_reason, t.created_at, t.completed_at
         FROM transaction t
         JOIN wallet w
           ON t.wallet_id = w.id
@@ -32,4 +36,25 @@
           AND w.user_id = #{userId}
           AND t.transaction_type = 'CHARGE'
     </select>
+
+    <!-- 비동기 워커 폴링: 진행 가능한 CHARGE 거래 id. (3B에서 lease/SKIP LOCKED로 강화) -->
+    <select id="findProcessableChargeIds" resultType="long">
+        SELECT id
+        FROM transaction
+        WHERE transaction_type = 'CHARGE'
+          AND status IN ('CREATED','WITHDRAWING','WITHDRAWN','DEPOSITING')
+        ORDER BY id
+        LIMIT #{limit}
+    </select>
+
+    <!-- CAS 상태 전이: 기대 상태일 때만 전이(낙관적 동시성). completed_at은 종료 전이에서만 세팅 -->
+    <update id="updateStatus">
+        UPDATE transaction
+           SET status = #{newStatus},
+               failure_reason = #{failureReason},
+               completed_at = #{completedAt}
+         WHERE id = #{id}
+           AND status = #{expectedStatus}
+    </update>
+
 </mapper>

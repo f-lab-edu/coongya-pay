@@ -13,7 +13,7 @@ class TransactionTest {
 
     @Test
     void createCharge_성공하면_CREATED_1원() {
-        Transaction chargeTransaction = Transaction.createCharge(1L, BigDecimal.ONE, "김쿵야");
+        Transaction chargeTransaction = Transaction.createCharge(1L, 1L, BigDecimal.ONE, "김쿵야");
         Assertions.assertThat(chargeTransaction.getStatus()).isSameAs(TransactionStatus.CREATED);
         Assertions.assertThat(chargeTransaction.getTransactionType()).isSameAs(TransactionType.CHARGE);
         Assertions.assertThat(chargeTransaction.getRemark()).isEqualTo("김쿵야");
@@ -22,7 +22,7 @@ class TransactionTest {
 
     @Test
     void createCharge_성공하면_CREATED_2백만원() {
-        Transaction chargeTransaction = Transaction.createCharge(1L, BigDecimal.valueOf(2_000_000), "김쿵야");
+        Transaction chargeTransaction = Transaction.createCharge(1L, 1L, BigDecimal.valueOf(2_000_000), "김쿵야");
         Assertions.assertThat(chargeTransaction.getStatus()).isSameAs(TransactionStatus.CREATED);
         Assertions.assertThat(chargeTransaction.getTransactionType()).isSameAs(TransactionType.CHARGE);
         Assertions.assertThat(chargeTransaction.getRemark()).isEqualTo("김쿵야");
@@ -32,7 +32,7 @@ class TransactionTest {
     @Test
     void createCharge_금액_1원_미만이면_INVALID_CHARGE_AMOUNT_던짐() {
         Assertions.assertThatThrownBy(() -> {
-            Transaction.createCharge(1L, BigDecimal.ZERO, "김쿵야");
+            Transaction.createCharge(1L, 1L, BigDecimal.ZERO, "김쿵야");
         }).isInstanceOf(BusinessException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.INVALID_CHARGE_AMOUNT);
     }
@@ -40,7 +40,7 @@ class TransactionTest {
     @Test
     void createCharge_금액_2백만원_초과면_INVALID_CHARGE_AMOUNT_던짐() {
         Assertions.assertThatThrownBy(() -> {
-            Transaction.createCharge(1L, BigDecimal.valueOf(2_000_001), "김쿵야");
+            Transaction.createCharge(1L, 1L, BigDecimal.valueOf(2_000_001), "김쿵야");
         }).isInstanceOf(BusinessException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.INVALID_CHARGE_AMOUNT);
     }
@@ -48,7 +48,7 @@ class TransactionTest {
     @Test
     void createCharge_remark_길이_7자_초과면_INVALID_REMARK_LENGTH_던짐() {
         Assertions.assertThatThrownBy(() -> {
-            Transaction.createCharge(1L, BigDecimal.ONE, "일이삼사오육칠팔");
+            Transaction.createCharge(1L, 1L, BigDecimal.ONE, "일이삼사오육칠팔");
         }).isInstanceOf(BusinessException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.INVALID_REMARK_LENGTH);
     }

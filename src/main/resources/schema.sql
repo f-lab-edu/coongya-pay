@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS `bank_account` (
 CREATE TABLE IF NOT EXISTS `transaction` (
     `id`                     BIGINT        NOT NULL AUTO_INCREMENT,
     `wallet_id`              INT           NOT NULL,
+    `account_id`             INT           NULL COMMENT 'CHARGE 출금 대상 은행계좌(비동기 워커 출금용), COMPENSATION은 NULL',
     `transaction_type`       VARCHAR(20)   NOT NULL COMMENT 'CHARGE,WITHDRAW,TRANSFER,COMPENSATION',
     `parent_transaction_id`  BIGINT        NULL COMMENT 'COMPENSATION 거래의 원거래 ID',
     `amount`                 DECIMAL(15,0) NOT NULL,

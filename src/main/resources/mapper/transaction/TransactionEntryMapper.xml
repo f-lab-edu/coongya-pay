@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.flab.coongyapay.transaction.mapper.TransactionEntryMapper">
+
+    <insert id="insert" parameterType="com.flab.coongyapay.transaction.mapper.dto.TransactionEntryDto"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO transaction_entry (transaction_id, wallet_id, entry_type, amount, balance_after, wallet_sequence)
+        VALUES (#{transactionId}, #{walletId}, #{entryType}, #{amount}, #{balanceAfter}, #{walletSequence})
+    </insert>
+
+    <select id="findByTransactionIdAndEntryType" resultType="com.flab.coongyapay.transaction.mapper.dto.TransactionEntryDto">
+        SELECT id, transaction_id, wallet_id, entry_type, amount, balance_after, wallet_sequence, created_at
+        FROM transaction_entry
+        WHERE transaction_id = #{transactionId}
+          AND entry_type = #{entryType}
+    </select>
+
+</mapper>
