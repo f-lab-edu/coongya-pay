@@ -9,4 +9,17 @@
         VALUES (#{userId}, #{balance}, #{version})
     </insert>
 
+    <select id="findByUserId" resultType="com.flab.coongyapay.wallet.mapper.dto.WalletDto">
+        SELECT id, user_id, balance, version
+        FROM wallet
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="findByUserIdForUpdate" resultType="com.flab.coongyapay.wallet.mapper.dto.WalletDto">
+        SELECT id, user_id, balance, version
+        FROM wallet
+        WHERE user_id = #{userId}
+        FOR UPDATE
+    </select>
+
 </mapper>
