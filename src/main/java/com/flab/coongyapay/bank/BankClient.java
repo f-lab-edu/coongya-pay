@@ -36,4 +36,15 @@ public interface BankClient {
      * @return 은행이 인지하는 해당 거래의 상태
      */
     BankWithdrawalStatus getWithdrawalStatus(String externalIdempotencyKey);
+
+    /**
+     * 은행 계좌 환불 (보상, 외부·비가역). 출금과 대칭. 멱등키로 이중 환불을 방지한다.
+     * 명시적 실패는 BankWithdrawalRejectedException, 결과 불명은 BankSystemException.
+     */
+    void refund(String bankCode, String accountNumber, BigDecimal amount, String externalIdempotencyKey);
+
+    /**
+     * 환불 상태 조회(대사/재조회용).
+     */
+    BankRefundStatus getRefundStatus(String externalIdempotencyKey);
 }

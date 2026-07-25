@@ -17,12 +17,14 @@ import com.flab.coongyapay.transaction.mapper.dto.RetryStateDto;
 import com.flab.coongyapay.transaction.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.TransientDataAccessException;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * CHARGE 거래 상태머신을 전진시키는 워커.
@@ -59,6 +61,7 @@ public class ChargeProcessor {
             case WITHDRAWING -> executeWithdrawal(transaction, leaseToken);
             case WITHDRAWN, DEPOSITING -> credit(transaction, leaseToken);
             case UNKNOWN -> reconcileWithdrawal(transaction, leaseToken);
+            case COMPENSATING -> checkCompensationCompletion(transaction, leaseToken);
             default -> { /* terminal 등: no-op */ }
         }
     }
@@ -115,16 +118,48 @@ public class ChargeProcessor {
             // 락 타임아웃/데드락 등 일시 실패 → 백오프 재시도
             RetryStateDto retry = transactionRepository.findRetryState(id);
             if (retry.getRetryCount() >= retry.getMaxRetries()) {
-                // 재시도 소진 → 후진 복구(보상) 개시. 보상 거래 생성/처리는 3D.
-                transactionRepository.updateStatusFenced(id, TransactionStatus.DEPOSITING,
-                        TransactionStatus.COMPENSATING, null, null, leaseToken);
+                initiateCompensation(transaction, leaseToken); // 재시도 소진 → 후진 복구
             } else {
                 transactionRepository.scheduleRetry(id, backoffSeconds(retry.getRetryCount()), leaseToken);
             }
         } catch (BusinessException e) {
-            // 한도 초과 등 영구 실패 → 즉시 보상 개시(재시도 무의미). 보상 처리는 3D.
-            transactionRepository.updateStatusFenced(id, TransactionStatus.DEPOSITING,
-                    TransactionStatus.COMPENSATING, null, null, leaseToken);
+            // 한도 초과 등 영구 실패 → 즉시 보상 개시(재시도 무의미)
+            initiateCompensation(transaction, leaseToken);
+        }
+    }
+
+    // 후진 복구 개시: DEPOSITING → COMPENSATING + 보상 거래 생성(UNIQUE(parent)로 이중 보상 차단)
+    private void initiateCompensation(Transaction charge, long leaseToken) {
+        boolean moved = transactionRepository.updateStatusFenced(charge.getId(), TransactionStatus.DEPOSITING,
+                TransactionStatus.COMPENSATING, null, null, leaseToken);
+        if (!moved) {
+            return;
+        }
+        createCompensationChild(charge);
+    }
+
+    private void createCompensationChild(Transaction charge) {
+        if (transactionRepository.findByParentTransactionId(charge.getId()).isPresent()) {
+            return;
+        }
+        try {
+            transactionRepository.save(com.flab.coongyapay.transaction.domain.Transaction.createCompensation(
+                    charge.getWalletId(), charge.getAccountId(), charge.getAmount(), charge.getId()));
+        } catch (DuplicateKeyException ignore) {
+            // 동시 생성 경합: UNIQUE(parent_transaction_id)가 하나만 허용
+        }
+    }
+
+    // COMPENSATING 안전망: 자식 보상이 없으면 생성, COMPLETED면 부모를 FAILED(REFUNDED)로 마감
+    private void checkCompensationCompletion(Transaction charge, long leaseToken) {
+        Optional<Transaction> child = transactionRepository.findByParentTransactionId(charge.getId());
+        if (child.isEmpty()) {
+            createCompensationChild(charge);
+            return;
+        }
+        if (child.get().getStatus() == TransactionStatus.COMPLETED) {
+            transactionRepository.updateStatusFenced(charge.getId(), TransactionStatus.COMPENSATING,
+                    TransactionStatus.FAILED, TransactionFailureReason.REFUNDED, now(), leaseToken);
         }
     }
 

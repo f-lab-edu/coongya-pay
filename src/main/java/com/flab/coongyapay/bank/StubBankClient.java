@@ -24,6 +24,8 @@ public class StubBankClient implements BankClient {
 
     private volatile WithdrawScenario withdrawScenario = WithdrawScenario.SUCCESS;
     private volatile BankWithdrawalStatus withdrawalStatus = BankWithdrawalStatus.WITHDRAWN;
+    private volatile WithdrawScenario refundScenario = WithdrawScenario.SUCCESS;
+    private volatile BankRefundStatus refundStatus = BankRefundStatus.REFUNDED;
 
     @Override
     public void verify(String bankCode, String accountNumber, String accountHolderName) {
@@ -56,6 +58,24 @@ public class StubBankClient implements BankClient {
         return withdrawalStatus;
     }
 
+    @Override
+    public void refund(String bankCode, String accountNumber, BigDecimal amount, String externalIdempotencyKey) {
+        switch (refundScenario) {
+            case REJECT -> throw new BankWithdrawalRejectedException(
+                    "Refund rejected by bank: key=" + externalIdempotencyKey);
+            case UNCLEAR -> throw new BankSystemException(
+                    "Refund result unclear (timeout/5xx): key=" + externalIdempotencyKey);
+            default -> log.info("Refund success: bankCode={}, accountNumber={}, amount={}, key={}",
+                    bankCode, accountNumber, amount, externalIdempotencyKey);
+        }
+    }
+
+    @Override
+    public BankRefundStatus getRefundStatus(String externalIdempotencyKey) {
+        log.info("Get refund status: key={}, status={}", externalIdempotencyKey, refundStatus);
+        return refundStatus;
+    }
+
     // --- 테스트 시나리오 주입 ---
 
     public void setWithdrawScenario(WithdrawScenario scenario) {
@@ -66,8 +86,18 @@ public class StubBankClient implements BankClient {
         this.withdrawalStatus = status;
     }
 
+    public void setRefundScenario(WithdrawScenario scenario) {
+        this.refundScenario = scenario;
+    }
+
+    public void setRefundStatus(BankRefundStatus status) {
+        this.refundStatus = status;
+    }
+
     public void reset() {
         this.withdrawScenario = WithdrawScenario.SUCCESS;
         this.withdrawalStatus = BankWithdrawalStatus.WITHDRAWN;
+        this.refundScenario = WithdrawScenario.SUCCESS;
+        this.refundStatus = BankRefundStatus.REFUNDED;
     }
 }

@@ -27,6 +27,12 @@
           AND status IN ('CREATED','WITHDRAWING','WITHDRAWN','DEPOSITING','UNKNOWN','COMPENSATING')
     </select>
 
+    <select id="findByParentTransactionId" resultType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto">
+        SELECT <include refid="columns"/>
+        FROM transaction
+        WHERE parent_transaction_id = #{parentTransactionId}
+    </select>
+
     <select id="findChargeByIdAndUserId" resultType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto">
         SELECT t.id, t.wallet_id, t.account_id, t.transaction_type, t.parent_transaction_id, t.amount, t.status, t.remark, t.failure_reason, t.created_at, t.completed_at
         FROM transaction t

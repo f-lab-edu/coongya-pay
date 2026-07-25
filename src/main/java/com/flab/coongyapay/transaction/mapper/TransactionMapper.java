@@ -21,6 +21,8 @@ public interface TransactionMapper {
 
     Optional<TransactionDto> findChargeByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
+    Optional<TransactionDto> findByParentTransactionId(@Param("parentTransactionId") Long parentTransactionId);
+
     // ===== 비동기 워커: 선점/펜싱/재시도 =====
 
     List<Long> selectClaimableIds(@Param("transactionType") String transactionType,

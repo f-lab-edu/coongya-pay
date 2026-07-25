@@ -55,6 +55,15 @@ public class Transaction {
         return new Transaction(null, walletId, accountId, TransactionType.CHARGE, null, amount, TransactionStatus.CREATED, remark, null, null, null);
     }
 
+    /**
+     * 보상(환불) 거래 생성. 원거래(parentTransactionId)에 1:1로 매달리며,
+     * transaction 테이블의 UNIQUE(parent_transaction_id)가 이중 보상을 차단한다.
+     */
+    public static Transaction createCompensation(Long walletId, Long accountId, BigDecimal amount, Long parentTransactionId) {
+        return new Transaction(null, walletId, accountId, TransactionType.COMPENSATION, parentTransactionId, amount,
+                TransactionStatus.CREATED, null, null, null, null);
+    }
+
     public static Transaction from(Long id, Long walletId, Long accountId, TransactionType transactionType, Long parentTransactionId,
                                    BigDecimal amount, TransactionStatus status, String remark,
                                    TransactionFailureReason failureReason, LocalDateTime createdAt,

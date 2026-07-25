@@ -41,6 +41,10 @@ public class TransactionRepository {
         return transactionMapper.findChargeByIdAndUserId(id, userId).map(transactionAssembler::toDomain);
     }
 
+    public Optional<Transaction> findByParentTransactionId(Long parentTransactionId) {
+        return transactionMapper.findByParentTransactionId(parentTransactionId).map(transactionAssembler::toDomain);
+    }
+
     // ===== 비동기 워커: 선점/펜싱/재시도 =====
 
     public List<Long> selectClaimableIds(TransactionType type, List<TransactionStatus> statuses, int limit) {
