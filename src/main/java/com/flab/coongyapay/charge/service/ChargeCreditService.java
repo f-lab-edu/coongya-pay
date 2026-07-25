@@ -35,14 +35,14 @@ public class ChargeCreditService {
     private final Clock clock;
 
     @Transactional
-    public void credit(Long transactionId) {
+    public void credit(Long transactionId, long leaseToken) {
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR));
 
-        // 이미 크레딧된 경우 멱등 성공: 상태만 COMPLETED로 마감 시도
+        // 이미 크레딧된 경우 멱등 성공: 상태만 COMPLETED로 마감 시도(펜싱)
         if (transactionEntryRepository.existsCredit(transactionId)) {
-            transactionRepository.updateStatus(transactionId, TransactionStatus.DEPOSITING,
-                    TransactionStatus.COMPLETED, null, LocalDateTime.now(clock));
+            transactionRepository.updateStatusFenced(transactionId, TransactionStatus.DEPOSITING,
+                    TransactionStatus.COMPLETED, null, LocalDateTime.now(clock), leaseToken);
             return;
         }
 
@@ -65,8 +65,8 @@ public class ChargeCreditService {
         // 2. 지갑 잔액/버전 갱신 (version = 최신 wallet_sequence)
         walletRepository.updateBalanceAndVersion(wallet.getId(), balanceAfter, nextSequence);
 
-        // 3. 거래 완료 (DEPOSITING → COMPLETED)
-        transactionRepository.updateStatus(transactionId, TransactionStatus.DEPOSITING,
-                TransactionStatus.COMPLETED, null, LocalDateTime.now(clock));
+        // 3. 거래 완료 (DEPOSITING → COMPLETED, 펜싱)
+        transactionRepository.updateStatusFenced(transactionId, TransactionStatus.DEPOSITING,
+                TransactionStatus.COMPLETED, null, LocalDateTime.now(clock), leaseToken);
     }
 }

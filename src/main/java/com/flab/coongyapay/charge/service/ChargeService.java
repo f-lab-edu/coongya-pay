@@ -6,6 +6,7 @@ import com.flab.coongyapay.bank.BankClient;
 import com.flab.coongyapay.bank.BankMaintenancePolicy;
 import com.flab.coongyapay.charge.controller.dto.ChargeRequest;
 import com.flab.coongyapay.charge.controller.dto.ChargeStatusResponse;
+import com.flab.coongyapay.charge.worker.ChargeDispatcher;
 import com.flab.coongyapay.common.exception.BusinessException;
 import com.flab.coongyapay.common.exception.ErrorCode;
 import com.flab.coongyapay.common.exception.ErrorResponse;
@@ -41,6 +42,7 @@ public class ChargeService {
     private final ChargeTransaction chargeTransaction;
     private final ObjectMapper objectMapper;
     private final TransactionRepository transactionRepository;
+    private final ChargeDispatcher chargeDispatcher;
 
     public ChargeResult charge(Long userId, String userName, String idempotencyKey, ChargeRequest request) {
         // 1. 멱등키 선점
@@ -87,13 +89,18 @@ public class ChargeService {
         }
 
         // 4. 충전 접수 커밋
+        ChargeResult result;
         try {
             String remark = resolveRemark(request.getRemark(), userName);
-            return chargeTransaction.commitReceipt(userId, ENDPOINT, idempotencyKey, bankAccount.getId(), request.getAmount(), remark);
+            result = chargeTransaction.commitReceipt(userId, ENDPOINT, idempotencyKey, bankAccount.getId(), request.getAmount(), remark);
         } catch (BusinessException e) {
             cacheFailure(userId, idempotencyKey, e);
             throw e;
         }
+
+        // 5. 커밋 후 fast-path 트리거(best-effort). 실패해도 스케줄 워커가 처리.
+        chargeDispatcher.dispatchAsync();
+        return result;
     }
 
     @Transactional(readOnly = true)
