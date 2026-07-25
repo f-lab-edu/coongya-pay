@@ -15,4 +15,11 @@
         VALUES (#{walletId}, #{transactionType}, #{parentTransactionId}, #{amount}, #{status}, #{remark}, #{failureReason}, #{completedAt})
     </insert>
 
+    <select id="sumInFlightChargeByWalletId" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0)
+        FROM transaction
+        WHERE wallet_id = #{walletId}
+          AND transaction_type = 'CHARGE'
+          AND status IN ('CREATED','WITHDRAWING','WITHDRAWN','DEPOSITING','UNKNOWN','COMPENSATING')
+    </select>
 </mapper>
