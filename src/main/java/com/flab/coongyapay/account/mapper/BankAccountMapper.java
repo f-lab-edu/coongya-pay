@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface BankAccountMapper {
@@ -16,6 +17,10 @@ public interface BankAccountMapper {
     boolean existsActiveByUserIdAndAccount(@Param("userId") Long userId, @Param("bankCode") String bankCode, @Param("accountNumber") String accountNumber);
 
     List<BankAccountDto> findActiveByUserId(@Param("userId") Long userId);
+
+    Optional<BankAccountDto> findActiveByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
+
+    Optional<BankAccountDto> findById(@Param("id") Long id);
 
     int softDelete(@Param("id") Long id, @Param("userId") Long userId);
 }

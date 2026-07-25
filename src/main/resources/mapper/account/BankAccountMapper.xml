@@ -36,6 +36,21 @@
         ORDER BY registered_at DESC
     </select>
 
+    <select id="findActiveByIdAndUserId" resultType="com.flab.coongyapay.account.mapper.dto.BankAccountDto">
+        SELECT id, user_id, bank_code, account_number, account_holder_name, registered_at, deleted_at
+        FROM bank_account
+        WHERE id = #{id}
+          AND user_id = #{userId}
+          AND deleted_at IS NULL
+    </select>
+
+    <!-- 비동기 워커 출금용: account_id로 계좌를 조회한다(삭제 여부 무관 — 출금 참조 정보 확보). -->
+    <select id="findById" resultType="com.flab.coongyapay.account.mapper.dto.BankAccountDto">
+        SELECT id, user_id, bank_code, account_number, account_holder_name, registered_at, deleted_at
+        FROM bank_account
+        WHERE id = #{id}
+    </select>
+
     <update id="softDelete">
         UPDATE bank_account
            SET deleted_at = NOW()

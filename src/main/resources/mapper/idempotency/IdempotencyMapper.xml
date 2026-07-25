@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.flab.coongyapay.idempotency.mapper.IdempotencyMapper">
+
+    <insert id="insert">
+        INSERT INTO idempotency_key (user_id, endpoint, idempotency_key, request_hash, status, response_http_status, response_body, lease_expires_at, expires_at)
+        VALUES (#{record.userId}, #{record.endpoint}, #{record.idempotencyKey}, #{record.requestHash}, #{record.status}, #{record.responseHttpStatus}, #{record.responseBody}, DATE_ADD(NOW(), INTERVAL #{leaseSeconds} SECOND), DATE_ADD(NOW(), INTERVAL #{ttlSeconds} SECOND))
+    </insert>
+
+    <select id="findByPk" resultType="com.flab.coongyapay.idempotency.mapper.dto.IdempotencyRecordDto">
+        SELECT user_id, endpoint, idempotency_key, request_hash, status, response_http_status, response_body, lease_expires_at, expires_at
+        FROM idempotency_key
+        WHERE user_id = #{userId}
+          AND endpoint = #{endpoint}
+          AND idempotency_key = #{idempotencyKey}
+    </select>
+
+    <update id="reclaim">
+        UPDATE idempotency_key
+           SET lease_expires_at = DATE_ADD(NOW(), INTERVAL #{leaseSeconds} SECOND)
+         WHERE user_id = #{userId}
+           AND endpoint = #{endpoint}
+           AND idempotency_key = #{idempotencyKey}
+           AND status = 'PROCESSING'
+           AND lease_expires_at &lt; NOW()
+    </update>
+
+    <update id="complete">
+        UPDATE idempotency_key
+           SET status = 'COMPLETED', response_http_status=#{responseHttpStatus}, response_body=#{responseBody}
+         WHERE user_id = #{userId}
+           AND endpoint = #{endpoint}
+           AND idempotency_key = #{idempotencyKey}
+           AND status = 'PROCESSING'
+    </update>
+
+    <delete id="delete">
+        DELETE FROM idempotency_key
+        WHERE user_id = #{userId}
+          AND endpoint = #{endpoint}
+          AND idempotency_key = #{idempotencyKey}
+          AND status = 'PROCESSING'
+    </delete>
+
+</mapper>

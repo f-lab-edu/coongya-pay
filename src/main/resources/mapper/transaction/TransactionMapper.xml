@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.flab.coongyapay.transaction.mapper.TransactionMapper">
+
+    <sql id="columns">
+        id, wallet_id, account_id, transaction_type, parent_transaction_id, amount, status, remark, failure_reason, created_at, completed_at
+    </sql>
+
+    <select id="findById" resultType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto">
+        SELECT <include refid="columns"/>
+        FROM transaction
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO transaction (wallet_id, account_id, transaction_type, parent_transaction_id, amount, status, remark, failure_reason, next_retry_at, completed_at)
+        VALUES (#{walletId}, #{accountId}, #{transactionType}, #{parentTransactionId}, #{amount}, #{status}, #{remark}, #{failureReason}, NOW(), #{completedAt})
+    </insert>
+
+    <select id="sumInFlightChargeByWalletId" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0)
+        FROM transaction
+        WHERE wallet_id = #{walletId}
+          AND transaction_type = 'CHARGE'
+          AND status IN ('CREATED','WITHDRAWING','WITHDRAWN','DEPOSITING','UNKNOWN','COMPENSATING')
+    </select>
+
+    <select id="findByParentTransactionId" resultType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto">
+        SELECT <include refid="columns"/>
+        FROM transaction
+        WHERE parent_transaction_id = #{parentTransactionId}
+    </select>
+
+    <select id="findChargeByIdAndUserId" resultType="com.flab.coongyapay.transaction.mapper.dto.TransactionDto">
+        SELECT t.id, t.wallet_id, t.account_id, t.transaction_type, t.parent_transaction_id, t.amount, t.status, t.remark, t.failure_reason, t.created_at, t.completed_at
+        FROM transaction t
+        JOIN wallet w
+          ON t.wallet_id = w.id
+        WHERE t.id = #{id}
+          AND w.user_id = #{userId}
+          AND t.transaction_type = 'CHARGE'
+    </select>
+
+    <!-- ===== 비동기 워커: 짧게 선점 → 락 밖에서 작업 → 짧게 기록 ===== -->
+
+    <!--
+      클레임 대상: 진행 가능한(non-terminal actionable) 거래.
+      next_retry_at 도래 & lease 만료(또는 없음)인 행만. FOR UPDATE SKIP LOCKED로 워커 간 경합 회피.
+      transactionType 파라미터로 CHARGE/COMPENSATION 워커를 분리 운용.
+    -->
+    <select id="selectClaimableIds" resultType="long">
+        SELECT id
+        FROM transaction
+        WHERE transaction_type = #{transactionType}
+          AND status IN
+          <foreach item="s" collection="statuses" open="(" separator="," close=")">#{s}</foreach>
+          AND (next_retry_at IS NULL OR next_retry_at &lt;= NOW())
+          AND (lease_expires_at IS NULL OR lease_expires_at &lt;= NOW())
+        ORDER BY id
+        LIMIT #{limit}
+        FOR UPDATE SKIP LOCKED
+    </select>
+
+    <!-- lease 획득: 만료시각 갱신 + fencing 토큰 증가(단조). first_attempt_at 최초 1회 기록. -->
+    <update id="acquireLease">
+        UPDATE transaction
+           SET lease_expires_at = DATE_ADD(NOW(), INTERVAL #{leaseSeconds} SECOND),
+               lease_token = lease_token + 1,
+               first_attempt_at = COALESCE(first_attempt_at, NOW())
+         WHERE id = #{id}
+    </update>
+
+    <select id="findLeaseToken" resultType="long">
+        SELECT lease_token FROM transaction WHERE id = #{id}
+    </select>
+
+    <!-- CAS 상태 전이(기대 상태일 때만). completed_at은 종료 전이에서만 세팅. -->
+    <update id="updateStatus">
+        UPDATE transaction
+           SET status = #{newStatus},
+               failure_reason = #{failureReason},
+               completed_at = #{completedAt}
+         WHERE id = #{id}
+           AND status = #{expectedStatus}
+    </update>
+
+    <!-- 펜싱 CAS 전이: 내가 선점한 lease_token일 때만 기록 → 리스 만료 후 재선점된 스테일 워커의 쓰기 차단. -->
+    <update id="updateStatusFenced">
+        UPDATE transaction
+           SET status = #{newStatus},
+               failure_reason = #{failureReason},
+               completed_at = #{completedAt}
+         WHERE id = #{id}
+           AND status = #{expectedStatus}
+           AND lease_token = #{leaseToken}
+    </update>
+
+    <!-- 재시도 백오프 예약: next_retry_at 갱신 + retry_count 증가. lease는 해제(다음 선점 허용). -->
+    <update id="scheduleRetry">
+        UPDATE transaction
+           SET next_retry_at = DATE_ADD(NOW(), INTERVAL #{backoffSeconds} SECOND),
+               retry_count = retry_count + 1,
+               lease_expires_at = NULL
+         WHERE id = #{id}
+           AND lease_token = #{leaseToken}
+    </update>
+
+    <!-- 재조회 카운트 증가(UNKNOWN 재조회 상한 판정용). -->
+    <update id="incrementRequeryCount">
+        UPDATE transaction
+           SET requery_count = requery_count + 1
+         WHERE id = #{id}
+           AND lease_token = #{leaseToken}
+    </update>
+
+    <select id="findRetryState" resultType="com.flab.coongyapay.transaction.mapper.dto.RetryStateDto">
+        SELECT retry_count, max_retries, requery_count,
+               first_attempt_at AS firstAttemptAt, external_idempotency_key AS externalIdempotencyKey
+        FROM transaction
+        WHERE id = #{id}
+    </select>
+
+    <!-- 출금 write-ahead 의도 시 외부 멱등키 확정(최초 1회). -->
+    <update id="assignExternalIdempotencyKey">
+        UPDATE transaction
+           SET external_idempotency_key = COALESCE(external_idempotency_key, #{externalIdempotencyKey})
+         WHERE id = #{id}
+    </update>
+
+</mapper>

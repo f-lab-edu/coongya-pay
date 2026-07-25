@@ -10,3 +10,8 @@ spring:
       continue-on-error: false
   session:
     store-type: none
+
+# 테스트는 스케줄 타이머 대신 ChargeProcessor.process()를 직접 호출한다.
+charge:
+  worker:
+    enabled: false
