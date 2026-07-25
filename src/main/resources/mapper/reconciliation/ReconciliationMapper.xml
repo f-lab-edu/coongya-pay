@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.flab.coongyapay.reconciliation.mapper.ReconciliationMapper">
+
+    <update id="expireIdleCreatedCharges">
+        UPDATE transaction
+           SET status = 'EXPIRED'
+         WHERE transaction_type = 'CHARGE'
+           AND status = 'CREATED'
+           AND created_at &lt;= DATE_SUB(NOW(), INTERVAL #{idleSeconds} SECOND)
+           AND (lease_expires_at IS NULL OR lease_expires_at &lt;= NOW())
+    </update>
+
+    <!-- wallet.balance == 마지막 원장 balance_after (원장 없으면 0) -->
+    <select id="countBalanceMismatches" resultType="int">
+        SELECT COUNT(*)
+        FROM wallet w
+        WHERE w.balance &lt;&gt; COALESCE(
+            (SELECT te.balance_after
+             FROM transaction_entry te
+             WHERE te.wallet_id = w.id
+             ORDER BY te.wallet_sequence DESC
+             LIMIT 1), 0)
+    </select>
+
+    <!-- wallet.version == MAX(wallet_sequence) == COUNT(entries) (순번 무결·무결점) -->
+    <select id="countVersionIntegrityViolations" resultType="int">
+        SELECT COUNT(*)
+        FROM wallet w
+        WHERE w.version &lt;&gt; COALESCE((SELECT MAX(te.wallet_sequence) FROM transaction_entry te WHERE te.wallet_id = w.id), 0)
+           OR COALESCE((SELECT MAX(te.wallet_sequence) FROM transaction_entry te WHERE te.wallet_id = w.id), 0)
+              &lt;&gt; (SELECT COUNT(*) FROM transaction_entry te WHERE te.wallet_id = w.id)
+    </select>
+
+    <!-- COMPLETED CHARGE ↔ 정확히 1개의 CREDIT 원장 -->
+    <select id="countCompletedChargesWithoutSingleCredit" resultType="int">
+        SELECT COUNT(*)
+        FROM transaction t
+        WHERE t.transaction_type = 'CHARGE'
+          AND t.status = 'COMPLETED'
+          AND (SELECT COUNT(*) FROM transaction_entry te
+               WHERE te.transaction_id = t.id AND te.entry_type = 'CREDIT') &lt;&gt; 1
+    </select>
+
+    <select id="countNonTerminalOlderThanMinutes" resultType="int">
+        SELECT COUNT(*)
+        FROM transaction
+        WHERE status IN ('CREATED','WITHDRAWING','WITHDRAWN','DEPOSITING','UNKNOWN','COMPENSATING','REFUNDING')
+          AND updated_at &lt;= DATE_SUB(NOW(), INTERVAL #{minutes} MINUTE)
+    </select>
+
+    <select id="countByStatus" resultType="int">
+        SELECT COUNT(*) FROM transaction WHERE status = #{status}
+    </select>
+
+</mapper>
