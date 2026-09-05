@@ -38,11 +38,11 @@ public class BankAccountRepository {
                 .collect(Collectors.toList());
     }
 
-    public Optional<BankAccount> findActiveByIdAndUserId(Long id, Long userId) {
-        return bankAccountMapper.findActiveByIdAndUserId(id, userId).map(bankAccountAssembler::toDomain);
+    public Optional<BankAccount> findActiveByIdAndUserId(Long bankAccountId, Long userId) {
+        return bankAccountMapper.findActiveByIdAndUserId(bankAccountId, userId).map(bankAccountAssembler::toDomain);
     }
 
-    public int softDelete(Long id, Long userId) {
-        return bankAccountMapper.softDelete(id, userId);
+    public int softDelete(Long bankAccountId, Long userId) {
+        return bankAccountMapper.softDelete(bankAccountId, userId);
     }
 }
