@@ -6,8 +6,6 @@ import com.flab.coongyapay.charge.controller.dto.ChargeResponse;
 import com.flab.coongyapay.charge.controller.dto.ChargeStatusResponse;
 import com.flab.coongyapay.charge.service.ChargeResult;
 import com.flab.coongyapay.charge.service.ChargeService;
-import com.flab.coongyapay.common.exception.BusinessException;
-import com.flab.coongyapay.common.exception.ErrorCode;
 import com.flab.coongyapay.transaction.enums.TransactionStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +15,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,13 +28,10 @@ public class ChargeController {
             @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody ChargeRequest request) {
 
-        // 1. 멱등키 형식 검증
-        validateIdempotencyKey(idempotencyKey);
-
-        // 2. 충전 서비스 호출
+        // 1. 충전 서비스 호출
         ChargeResult result = chargeService.charge(userDetails.getUser().getId(), userDetails.getUser().getName(), idempotencyKey, request);
 
-        // 3. 서비스 호출 결과에 따른 응답 변환
+        // 2. 서비스 호출 결과에 따른 응답 변환
         if (result.isReplayed()) {
             return ResponseEntity.status(result.getHttpStatus())
                     .contentType(MediaType.APPLICATION_JSON)
@@ -55,17 +49,4 @@ public class ChargeController {
         return chargeService.getCharge(userDetails.getUser().getId(), chargeId);
     }
 
-    private void validateIdempotencyKey(String idempotencyKey) {
-
-        if (idempotencyKey == null || idempotencyKey.isBlank()) {
-            throw new BusinessException(ErrorCode.INVALID_IDEMPOTENCY_KEY);
-        }
-        try {
-            if (UUID.fromString(idempotencyKey).version() != 4) {
-                throw new BusinessException(ErrorCode.INVALID_IDEMPOTENCY_KEY);
-            }
-        } catch (IllegalArgumentException e) {
-            throw new BusinessException(ErrorCode.INVALID_IDEMPOTENCY_KEY);
-        }
-    }
 }

@@ -43,26 +43,29 @@ public class ChargeService {
     private final TransactionRepository transactionRepository;
 
     public ChargeResult charge(Long userId, String userName, String idempotencyKey, ChargeRequest request) {
-        // 1. 멱등키 선점
+        // 1. 멱등키 형식 검증
+        idempotencyService.validateIdempotencyKey(idempotencyKey);
+
+        // 2. 멱등키 선점
         String requestHash = RequestHashUtil.sha256Hex(canonicalize(request));
         ClaimResult claimed = idempotencyService.claim(userId, ENDPOINT, idempotencyKey, requestHash);
         if (claimed.isReplayed()) {
             return ChargeResult.replay(claimed.getResponseHttpStatus(), claimed.getCachedResponseBody());
         }
 
-        // 2. 사전 검증
+        // 3. 사전 검증
         BankAccount bankAccount;
         try {
-            // 2.1. 은행 점검 시간 검증
+            // 3.1. 은행 점검 시간 검증
             if (bankMaintenancePolicy.isMaintenanceTime()) {
                 throw new BusinessException(ErrorCode.BANK_MAINTENANCE);
             }
 
-            // 2.2. 계좌 소유 및 활성 여부 검증
+            // 3.2. 계좌 소유 및 활성 여부 검증
             bankAccount = bankAccountRepository.findActiveByIdAndUserId(request.getBankAccountId(), userId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.ACCOUNT_NOT_FOUND));
 
-            // 2.3. 지갑 잔액 한도 검증
+            // 3.3. 지갑 잔액 한도 검증
             Wallet wallet = walletRepository.findByUserId(userId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR));
 
@@ -70,7 +73,7 @@ public class ChargeService {
                 throw new BusinessException(ErrorCode.WALLET_BALANCE_LIMIT_EXCEEDED);
             }
 
-            // 2.4. 송금비밀번호 검증
+            // 3.4. 송금비밀번호 검증
             userTransferPinVerifier.verify(userId, request.getTransferPin());
         } catch (BusinessException e) {
             // 사전 검증 실패 시 멱등키 release
@@ -78,7 +81,7 @@ public class ChargeService {
             throw e;
         }
 
-        // 3. 은행 출금 사전 검증
+        // 4. 은행 출금 사전 검증
         try {
             bankClient.validateWithdrawal(bankAccount.getBankCode(), bankAccount.getAccountNumber());
         } catch (BusinessException e) {
@@ -86,7 +89,7 @@ public class ChargeService {
             throw e;
         }
 
-        // 4. 충전 접수 커밋
+        // 5. 충전 접수 커밋
         try {
             String remark = resolveRemark(request.getRemark(), userName);
             return chargeTransaction.commitReceipt(userId, ENDPOINT, idempotencyKey, request.getAmount(), remark);

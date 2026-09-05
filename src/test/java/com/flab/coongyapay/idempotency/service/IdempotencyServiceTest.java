@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -92,6 +93,40 @@ class IdempotencyServiceTest {
         })
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.IDEMPOTENCY_KEY_PROCESSING);
+    }
+
+    @Test
+    void 멱등키가_null이면_INVALID_IDEMPOTENCY_KEY_던짐() {
+        Assertions.assertThatThrownBy(() -> {
+            idempotencyService.validateIdempotencyKey(null);
+        })
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.INVALID_IDEMPOTENCY_KEY);
+    }
+
+    @Test
+    void 멱등키가_blank면_INVALID_IDEMPOTENCY_KEY_던짐() {
+        Assertions.assertThatThrownBy(() -> {
+                    idempotencyService.validateIdempotencyKey("");
+        })
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.INVALID_IDEMPOTENCY_KEY);
+    }
+
+    @Test
+    void 멱등키가_UUID_버전4_아니면_INVALID_IDEMPOTENCY_KEY_던짐() {
+        Assertions.assertThatThrownBy(() -> {
+                    idempotencyService.validateIdempotencyKey(UUID.fromString("123e4567-e89b-12d3-a456-426614174000").toString());
+        })
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.INVALID_IDEMPOTENCY_KEY);
+    }
+
+    @Test
+    void 멱등키가_UUID_버전4면_통과() {
+        Assertions.assertThatCode(() -> {
+            idempotencyService.validateIdempotencyKey(UUID.randomUUID().toString());
+        }).doesNotThrowAnyException();
     }
 
     private IdempotencyRecord record(String hash, IdempotencyStatus status, Integer responseHttpStatus, String responseBody) {
