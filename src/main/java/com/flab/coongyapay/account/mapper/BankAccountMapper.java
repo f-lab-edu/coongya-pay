@@ -20,5 +20,7 @@ public interface BankAccountMapper {
 
     Optional<BankAccountDto> findActiveByIdAndUserId(@Param("bankAccountId") Long bankAccountId, @Param("userId") Long userId);
 
+    Optional<BankAccountDto> findById(@Param("bankAccountId") Long bankAccountId);
+
     int softDelete(@Param("bankAccountId") Long bankAccountId, @Param("userId") Long userId);
 }

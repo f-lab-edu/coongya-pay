@@ -12,16 +12,13 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransactionDto {
+public class TransactionEntryDto {
     private Long id;
+    private Long transactionId;
     private Long walletId;
-    private Long accountId;
-    private String transactionType;
-    private Long parentTransactionId;
+    private String entryType;
     private BigDecimal amount;
-    private String status;
-    private String remark;
-    private String failureReason;
+    private BigDecimal balanceAfter;
+    private long walletSequence;
     private LocalDateTime createdAt;
-    private LocalDateTime completedAt;
 }

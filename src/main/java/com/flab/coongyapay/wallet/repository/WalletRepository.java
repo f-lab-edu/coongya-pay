@@ -7,6 +7,7 @@ import com.flab.coongyapay.wallet.mapper.dto.WalletDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Repository
@@ -28,5 +29,13 @@ public class WalletRepository {
 
     public Optional<Wallet> findByUserIdForUpdate(Long userId) {
         return walletMapper.findByUserIdForUpdate(userId).map(walletAssembler::toDomain);
+    }
+
+    public Optional<Wallet> findByIdForUpdate(Long id) {
+        return walletMapper.findByIdForUpdate(id).map(walletAssembler::toDomain);
+    }
+
+    public void updateBalanceAndVersion(Long id, BigDecimal balance, long version) {
+        walletMapper.updateBalanceAndVersion(id, balance, version);
     }
 }

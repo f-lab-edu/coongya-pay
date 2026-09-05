@@ -28,7 +28,7 @@ public class ChargeTransaction {
     private final ObjectMapper objectMapper;
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public ChargeResult commitReceipt(Long userId, String endpoint, String idempotencyKey, BigDecimal amount, String remark) {
+    public ChargeResult commitReceipt(Long userId, String endpoint, String idempotencyKey, Long accountId, BigDecimal amount, String remark) {
         // 1. wallet 단위 비관적 락
         Wallet wallet = walletRepository.findByUserIdForUpdate(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR));
@@ -40,8 +40,8 @@ public class ChargeTransaction {
             throw new BusinessException(ErrorCode.WALLET_BALANCE_LIMIT_EXCEEDED);
         }
 
-        // 3. 거래 CREATED 생성
-        Transaction savedTransaction = transactionRepository.save(Transaction.createCharge(walletId, amount, remark));
+        // 3. 거래 CREATED 생성 (출금 대상 계좌 account_id 연결 → 비동기 워커가 출금에 사용)
+        Transaction savedTransaction = transactionRepository.save(Transaction.createCharge(walletId, accountId, amount, remark));
 
         // 4. 멱등키 COMPLETED + 202 Accepted 응답 캐시
         String body = serialize(ChargeResponse.from(savedTransaction));

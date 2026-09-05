@@ -22,4 +22,19 @@
         FOR UPDATE
     </select>
 
+    <select id="findByIdForUpdate" resultType="com.flab.coongyapay.wallet.mapper.dto.WalletDto">
+        SELECT id, user_id, balance, version
+        FROM wallet
+        WHERE id = #{id}
+        FOR UPDATE
+    </select>
+
+    <!-- wallet FOR UPDATE 락 보유 상태에서만 호출. version은 순번 로그 인덱스(낙관적 아님). -->
+    <update id="updateBalanceAndVersion">
+        UPDATE wallet
+           SET balance = #{balance},
+               version = #{version}
+         WHERE id = #{id}
+    </update>
+
 </mapper>
