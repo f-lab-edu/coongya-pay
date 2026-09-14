@@ -141,6 +141,7 @@ CREATE TABLE IF NOT EXISTS `idempotency_key` (
     `status`               VARCHAR(20)  NOT NULL COMMENT 'PROCESSING,COMPLETED',
     `response_http_status` INT          NULL,
     `response_body`        TEXT         NULL,
+    `lease_token`          BIGINT       NOT NULL DEFAULT 0 COMMENT 'fencing 카운터',
     `lease_expires_at`     DATETIME     NOT NULL COMMENT 'PROCESSING 점유 만료 시각(선점 시 now+120초)',
     `expires_at`           DATETIME     NOT NULL COMMENT '보관 TTL(now+24시간), 정리 스케줄러 대상 판별',
     `created_at`           DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,

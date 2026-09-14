@@ -12,8 +12,9 @@ public class IdempotencyRecord {
     private final IdempotencyStatus status;
     private final Integer responseHttpStatus;
     private final String responseBody;
+    private final Long leaseToken;
 
-    private IdempotencyRecord(Long userId, String endpoint, String idempotencyKey, String requestHash, IdempotencyStatus status, Integer responseHttpStatus, String responseBody) {
+    private IdempotencyRecord(Long userId, String endpoint, String idempotencyKey, String requestHash, IdempotencyStatus status, Integer responseHttpStatus, String responseBody, Long leaseToken) {
         this.userId = userId;
         this.endpoint = endpoint;
         this.idempotencyKey = idempotencyKey;
@@ -21,13 +22,14 @@ public class IdempotencyRecord {
         this.status = status;
         this.responseHttpStatus = responseHttpStatus;
         this.responseBody = responseBody;
+        this.leaseToken = leaseToken;
     }
 
     public static IdempotencyRecord create(Long userId, String endpoint, String idempotencyKey, String requestHash) {
-        return new IdempotencyRecord(userId, endpoint, idempotencyKey, requestHash, IdempotencyStatus.PROCESSING, null, null);
+        return new IdempotencyRecord(userId, endpoint, idempotencyKey, requestHash, IdempotencyStatus.PROCESSING, null, null, 0L);
     }
 
-    public static IdempotencyRecord from(Long userId, String endpoint, String idempotencyKey, String requestHash, IdempotencyStatus status, Integer responseHttpStatus, String responseBody) {
-        return new IdempotencyRecord(userId, endpoint, idempotencyKey, requestHash, status, responseHttpStatus, responseBody);
+    public static IdempotencyRecord from(Long userId, String endpoint, String idempotencyKey, String requestHash, IdempotencyStatus status, Integer responseHttpStatus, String responseBody, Long leaseToken) {
+        return new IdempotencyRecord(userId, endpoint, idempotencyKey, requestHash, status, responseHttpStatus, responseBody, leaseToken);
     }
 }

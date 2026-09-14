@@ -41,18 +41,85 @@ class IdempotencyMapperTest {
     }
 
     @Test
+    void reclaim_후_lease_token_1_증가() {
+        IdempotencyRecordDto dto = newDto("key");
+        idempotencyMapper.insert(dto, EXPIRED_LEASE_SECONDS, TTL_SECONDS);
+
+        int reclaimed = idempotencyMapper.reclaim(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey(), LEASE_SECONDS);
+        Assertions.assertThat(reclaimed).isEqualTo(1);
+        IdempotencyRecordDto recordDto = idempotencyMapper.findByPk(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey())
+                .orElseThrow();
+        Assertions.assertThat(recordDto.getLeaseToken()).isEqualTo(dto.getLeaseToken() + 1);
+    }
+
+    @Test
     void complete시_COMPLETED() {
-        idempotencyMapper.insert(newDto("key"), LEASE_SECONDS, TTL_SECONDS);
-        int affected = idempotencyMapper.complete(1L, ENDPOINT, "key", 202, "body");
+        IdempotencyRecordDto dto = newDto("key");
+        idempotencyMapper.insert(dto, LEASE_SECONDS, TTL_SECONDS);
+        int affected = idempotencyMapper.complete(1L, ENDPOINT, "key", 202, "body", dto.getLeaseToken());
         Optional<IdempotencyRecordDto> optional = idempotencyMapper.findByPk(1L, ENDPOINT, "key");
-        Assertions.assertThat(affected).isSameAs(1);
+        Assertions.assertThat(affected).isEqualTo(1);
         Assertions.assertThat(optional).isPresent();
         Assertions.assertThat(optional.get().getStatus()).isEqualTo("COMPLETED");
         Assertions.assertThat(optional.get().getResponseHttpStatus()).isEqualTo(202);
         Assertions.assertThat(optional.get().getResponseBody()).isEqualTo("body");
     }
 
+    @Test
+    void 옛날_토큰_complete_안_됨() {
+        IdempotencyRecordDto dto = newDto("key");
+        idempotencyMapper.insert(dto, EXPIRED_LEASE_SECONDS, TTL_SECONDS);
+        int reclaimed = idempotencyMapper.reclaim(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey(), LEASE_SECONDS);
+
+        Assertions.assertThat(reclaimed).isEqualTo(1);
+
+        int completed = idempotencyMapper.complete(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey(), 200, "body", dto.getLeaseToken());
+
+        Assertions.assertThat(completed).isEqualTo(0);
+
+        IdempotencyRecordDto recordDto = idempotencyMapper.findByPk(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey()).orElseThrow();
+        Assertions.assertThat(recordDto.getStatus()).isEqualTo("PROCESSING");
+    }
+
+    @Test
+    void 새_토큰_complete_됨() {
+        IdempotencyRecordDto dto = newDto("key");
+        idempotencyMapper.insert(dto, LEASE_SECONDS, TTL_SECONDS);
+
+        int completed = idempotencyMapper.complete(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey(), 200, "body", dto.getLeaseToken());
+
+        Assertions.assertThat(completed).isEqualTo(1);
+
+        IdempotencyRecordDto recordDto = idempotencyMapper.findByPk(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey()).orElseThrow();
+        Assertions.assertThat(recordDto.getStatus()).isEqualTo("COMPLETED");
+    }
+
+    @Test
+    void delete_토큰() {
+        IdempotencyRecordDto dto = newDto("key");
+        idempotencyMapper.insert(dto, LEASE_SECONDS, TTL_SECONDS);
+
+        int deleted = idempotencyMapper.delete(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey(), dto.getLeaseToken());
+
+        Assertions.assertThat(deleted).isEqualTo(1);
+        Assertions.assertThat(idempotencyMapper.findByPk(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey())).isEmpty();
+    }
+
+    @Test
+    void 옛날_토큰_delete_안_됨() {
+        IdempotencyRecordDto dto = newDto("key");
+        idempotencyMapper.insert(dto, EXPIRED_LEASE_SECONDS, TTL_SECONDS);
+        int reclaimed = idempotencyMapper.reclaim(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey(), LEASE_SECONDS);
+
+        Assertions.assertThat(reclaimed).isEqualTo(1);
+
+        int deleted = idempotencyMapper.delete(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey(), dto.getLeaseToken());
+
+        Assertions.assertThat(deleted).isEqualTo(0);
+        Assertions.assertThat(idempotencyMapper.findByPk(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey())).isPresent();
+    }
+
     private IdempotencyRecordDto newDto(String key) {
-        return new IdempotencyRecordDto(1L, ENDPOINT, key, "hash", "PROCESSING", null, null, null, null);
+        return new IdempotencyRecordDto(1L, ENDPOINT, key, "hash", "PROCESSING", null, null, 0L, null, null);
     }
 }

@@ -39,12 +39,12 @@ public class IdempotencyRepository {
         return reclaimed == 1;
     }
 
-    public boolean complete(Long userId, String endpoint, String idempotencyKey, int responseHttpStatus, String responseBody) {
-        int completed = idempotencyMapper.complete(userId, endpoint, idempotencyKey, responseHttpStatus, responseBody);
+    public boolean complete(Long userId, String endpoint, String idempotencyKey, int responseHttpStatus, String responseBody, Long leaseToken) {
+        int completed = idempotencyMapper.complete(userId, endpoint, idempotencyKey, responseHttpStatus, responseBody, leaseToken);
         return completed == 1;
     }
 
-    public void release(Long userId, String endpoint, String idempotencyKey) {
-        idempotencyMapper.delete(userId, endpoint, idempotencyKey);
+    public void release(Long userId, String endpoint, String idempotencyKey, Long leaseToken) {
+        idempotencyMapper.delete(userId, endpoint, idempotencyKey, leaseToken);
     }
 }

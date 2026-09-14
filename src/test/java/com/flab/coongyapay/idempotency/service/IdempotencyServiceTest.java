@@ -48,7 +48,7 @@ class IdempotencyServiceTest {
     void 해시_다르면_IDEMPOTENCY_KEY_CONFLICT_던짐() {
         when(idempotencyRepository.tryInsertProcessing(any())).thenReturn(false);
         when(idempotencyRepository.findByPk(1L, ENDPOINT, KEY))
-                .thenReturn(Optional.of(record("hash2", IdempotencyStatus.PROCESSING, null, null)));
+                .thenReturn(Optional.of(record("hash2", IdempotencyStatus.PROCESSING, null, null, 0L)));
 
         Assertions.assertThatThrownBy(() -> idempotencyService.claim(1L, ENDPOINT, KEY, HASH))
                 .isInstanceOf(BusinessException.class)
@@ -60,7 +60,7 @@ class IdempotencyServiceTest {
     @Test
     void 완료된_키면_캐시응답반환() {
         when(idempotencyRepository.tryInsertProcessing(any())).thenReturn(false);
-        when(idempotencyRepository.findByPk(1L, ENDPOINT, KEY)).thenReturn(Optional.of(record(HASH, IdempotencyStatus.COMPLETED, HttpStatus.SC_ACCEPTED, RESPONSE_BODY)));
+        when(idempotencyRepository.findByPk(1L, ENDPOINT, KEY)).thenReturn(Optional.of(record(HASH, IdempotencyStatus.COMPLETED, HttpStatus.SC_ACCEPTED, RESPONSE_BODY, 0L)));
 
         ClaimResult result = idempotencyService.claim(1L, ENDPOINT, KEY, HASH);
 
@@ -72,7 +72,7 @@ class IdempotencyServiceTest {
     @Test
     void 처리중_키_reclaim_성공시_newRequest_반환() {
         when(idempotencyRepository.tryInsertProcessing(any())).thenReturn(false);
-        when(idempotencyRepository.findByPk(1L, ENDPOINT, KEY)).thenReturn(Optional.of(record(HASH, IdempotencyStatus.PROCESSING, null, null)));
+        when(idempotencyRepository.findByPk(1L, ENDPOINT, KEY)).thenReturn(Optional.of(record(HASH, IdempotencyStatus.PROCESSING, null, null, 0L)));
         when(idempotencyRepository.reclaim(1L, ENDPOINT, KEY)).thenReturn(true);
 
         ClaimResult result = idempotencyService.claim(1L, ENDPOINT, KEY, HASH);
@@ -85,7 +85,7 @@ class IdempotencyServiceTest {
     @Test
     void 처리중_키_reclaim_실패시_IDEMPOTENCY_KEY_PROCESSING_던짐() {
         when(idempotencyRepository.tryInsertProcessing(any())).thenReturn(false);
-        when(idempotencyRepository.findByPk(1L, ENDPOINT, KEY)).thenReturn(Optional.of(record(HASH, IdempotencyStatus.PROCESSING, null, null)));
+        when(idempotencyRepository.findByPk(1L, ENDPOINT, KEY)).thenReturn(Optional.of(record(HASH, IdempotencyStatus.PROCESSING, null, null, 0L)));
         when(idempotencyRepository.reclaim(1L, ENDPOINT, KEY)).thenReturn(false);
 
         Assertions.assertThatThrownBy(() -> {
@@ -129,8 +129,8 @@ class IdempotencyServiceTest {
         }).doesNotThrowAnyException();
     }
 
-    private IdempotencyRecord record(String hash, IdempotencyStatus status, Integer responseHttpStatus, String responseBody) {
-        return IdempotencyRecord.from(1L, ENDPOINT, KEY, hash, status, responseHttpStatus, responseBody);
+    private IdempotencyRecord record(String hash, IdempotencyStatus status, Integer responseHttpStatus, String responseBody, Long leaseToken) {
+        return IdempotencyRecord.from(1L, ENDPOINT, KEY, hash, status, responseHttpStatus, responseBody, leaseToken);
     }
 
 }

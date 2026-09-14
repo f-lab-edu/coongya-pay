@@ -19,6 +19,7 @@ public class IdempotencyRecordDto {
     private String status;
     private Integer responseHttpStatus;
     private String responseBody;
+    private Long leaseToken;
     private LocalDateTime leaseExpiresAt;
     private LocalDateTime expiresAt;
 }

@@ -9,10 +9,10 @@ import org.springframework.stereotype.Component;
 public class IdempotencyAssembler {
 
     public IdempotencyRecordDto toDto(IdempotencyRecord domain) {
-        return new IdempotencyRecordDto(domain.getUserId(), domain.getEndpoint(), domain.getIdempotencyKey(), domain.getRequestHash(), domain.getStatus().name(), domain.getResponseHttpStatus(), domain.getResponseBody(), null, null);
+        return new IdempotencyRecordDto(domain.getUserId(), domain.getEndpoint(), domain.getIdempotencyKey(), domain.getRequestHash(), domain.getStatus().name(), domain.getResponseHttpStatus(), domain.getResponseBody(), domain.getLeaseToken(), null, null);
     }
 
     public IdempotencyRecord toDomain(IdempotencyRecordDto dto) {
-        return IdempotencyRecord.from(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey(), dto.getRequestHash(), dto.getStatus() == null ? null : IdempotencyStatus.valueOf(dto.getStatus()), dto.getResponseHttpStatus(), dto.getResponseBody());
+        return IdempotencyRecord.from(dto.getUserId(), dto.getEndpoint(), dto.getIdempotencyKey(), dto.getRequestHash(), dto.getStatus() == null ? null : IdempotencyStatus.valueOf(dto.getStatus()), dto.getResponseHttpStatus(), dto.getResponseBody(), dto.getLeaseToken());
     }
 }

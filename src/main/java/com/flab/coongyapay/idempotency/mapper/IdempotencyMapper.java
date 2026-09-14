@@ -15,7 +15,7 @@ public interface IdempotencyMapper {
 
     int reclaim(@Param("userId") Long userId, @Param("endpoint") String endpoint, @Param("idempotencyKey") String idempotencyKey, @Param("leaseSeconds") long leaseSeconds);
 
-    int complete(@Param("userId") Long userId, @Param("endpoint") String endpoint, @Param("idempotencyKey") String idempotencyKey, @Param("responseHttpStatus") int responseHttpStatus, @Param("responseBody") String responseBody);
+    int complete(@Param("userId") Long userId, @Param("endpoint") String endpoint, @Param("idempotencyKey") String idempotencyKey, @Param("responseHttpStatus") int responseHttpStatus, @Param("responseBody") String responseBody, @Param("leaseToken") Long leaseToken);
 
-    int delete(@Param("userId") Long userId, @Param("endpoint") String endpoint, @Param("idempotencyKey") String idempotencyKey);
+    int delete(@Param("userId") Long userId, @Param("endpoint") String endpoint, @Param("idempotencyKey") String idempotencyKey, @Param("leaseToken") Long leaseToken);
 }

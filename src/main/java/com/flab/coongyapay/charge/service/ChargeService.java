@@ -79,7 +79,7 @@ public class ChargeService {
             userTransferPinVerifier.verify(userId, request.getTransferPin());
         } catch (BusinessException e) {
             // 사전 검증 실패 시 멱등키 release
-            idempotencyService.release(userId, ENDPOINT, idempotencyKey);
+            idempotencyService.release(userId, ENDPOINT, idempotencyKey, claimed.getLeaseToken());
             throw e;
         }
 
@@ -87,7 +87,7 @@ public class ChargeService {
         try {
             bankClient.validateWithdrawal(bankAccount.getBankCode(), bankAccount.getAccountNumber());
         } catch (BusinessException e) {
-            cacheFailure(userId, idempotencyKey, e);
+            cacheFailure(userId, idempotencyKey, claimed.getLeaseToken(), e);
             throw e;
         }
 
@@ -95,9 +95,9 @@ public class ChargeService {
         ChargeResult result;
         try {
             String remark = resolveRemark(request.getRemark(), userName);
-            result = chargeTransaction.commitReceipt(userId, ENDPOINT, idempotencyKey, bankAccount.getId(), request.getAmount(), remark);
+            result = chargeTransaction.commitReceipt(userId, ENDPOINT, idempotencyKey, bankAccount.getId(), request.getAmount(), remark, claimed.getLeaseToken());
         } catch (BusinessException e) {
-            cacheFailure(userId, idempotencyKey, e);
+            cacheFailure(userId, idempotencyKey, claimed.getLeaseToken(), e);
             throw e;
         }
 
@@ -120,10 +120,10 @@ public class ChargeService {
                 + (request.getRemark() == null ? "" : request.getRemark());
     }
 
-    private void cacheFailure(Long userId, String idempotencyKey, BusinessException e) {
+    private void cacheFailure(Long userId, String idempotencyKey, Long leaseToken, BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();
         String body = serialize(ErrorResponse.of(errorCode));
-        idempotencyService.complete(userId, ENDPOINT, idempotencyKey, errorCode.getHttpStatus().value(), body);
+        idempotencyService.complete(userId, ENDPOINT, idempotencyKey, errorCode.getHttpStatus().value(), body, leaseToken);
     }
 
     private String serialize(ErrorResponse response) {

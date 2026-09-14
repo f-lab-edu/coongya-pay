@@ -4,12 +4,12 @@
 <mapper namespace="com.flab.coongyapay.idempotency.mapper.IdempotencyMapper">
 
     <insert id="insert">
-        INSERT INTO idempotency_key (user_id, endpoint, idempotency_key, request_hash, status, response_http_status, response_body, lease_expires_at, expires_at)
-        VALUES (#{record.userId}, #{record.endpoint}, #{record.idempotencyKey}, #{record.requestHash}, #{record.status}, #{record.responseHttpStatus}, #{record.responseBody}, DATE_ADD(NOW(), INTERVAL #{leaseSeconds} SECOND), DATE_ADD(NOW(), INTERVAL #{ttlSeconds} SECOND))
+        INSERT INTO idempotency_key (user_id, endpoint, idempotency_key, request_hash, status, response_http_status, response_body, lease_token, lease_expires_at, expires_at)
+        VALUES (#{record.userId}, #{record.endpoint}, #{record.idempotencyKey}, #{record.requestHash}, #{record.status}, #{record.responseHttpStatus}, #{record.responseBody}, #{record.leaseToken}, DATE_ADD(NOW(), INTERVAL #{leaseSeconds} SECOND), DATE_ADD(NOW(), INTERVAL #{ttlSeconds} SECOND))
     </insert>
 
     <select id="findByPk" resultType="com.flab.coongyapay.idempotency.mapper.dto.IdempotencyRecordDto">
-        SELECT user_id, endpoint, idempotency_key, request_hash, status, response_http_status, response_body, lease_expires_at, expires_at
+        SELECT user_id, endpoint, idempotency_key, request_hash, status, response_http_status, response_body, lease_token, lease_expires_at, expires_at
         FROM idempotency_key
         WHERE user_id = #{userId}
           AND endpoint = #{endpoint}
@@ -18,7 +18,7 @@
 
     <update id="reclaim">
         UPDATE idempotency_key
-           SET lease_expires_at = DATE_ADD(NOW(), INTERVAL #{leaseSeconds} SECOND)
+           SET lease_token = lease_token + 1, lease_expires_at = DATE_ADD(NOW(), INTERVAL #{leaseSeconds} SECOND)
          WHERE user_id = #{userId}
            AND endpoint = #{endpoint}
            AND idempotency_key = #{idempotencyKey}
@@ -33,6 +33,7 @@
            AND endpoint = #{endpoint}
            AND idempotency_key = #{idempotencyKey}
            AND status = 'PROCESSING'
+           AND lease_token = #{leaseToken}
     </update>
 
     <delete id="delete">
@@ -41,6 +42,7 @@
           AND endpoint = #{endpoint}
           AND idempotency_key = #{idempotencyKey}
           AND status = 'PROCESSING'
+          AND lease_token = #{leaseToken}
     </delete>
 
 </mapper>

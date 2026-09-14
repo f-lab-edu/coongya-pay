@@ -8,6 +8,7 @@ import com.flab.coongyapay.idempotency.repository.IdempotencyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -22,7 +23,7 @@ public class IdempotencyService {
         IdempotencyRecord record = IdempotencyRecord.create(userId, endpoint, idempotencyKey, requestHash);
         boolean claimed = idempotencyRepository.tryInsertProcessing(record);
         if (claimed) {
-            return ClaimResult.newRequest();
+            return ClaimResult.newRequest(record.getLeaseToken());
         }
 
         IdempotencyRecord existingRecord = idempotencyRepository.findByPk(userId, endpoint, idempotencyKey)
@@ -38,21 +39,23 @@ public class IdempotencyService {
 
         boolean reclaimed = idempotencyRepository.reclaim(userId, endpoint, idempotencyKey);
         if (reclaimed) {
-            return ClaimResult.newRequest();
+            IdempotencyRecord reclaimedIdempotency = idempotencyRepository.findByPk(userId, endpoint, idempotencyKey)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.IDEMPOTENCY_KEY_PROCESSING));
+            return ClaimResult.newRequest(reclaimedIdempotency.getLeaseToken());
         } else {
             throw new BusinessException(ErrorCode.IDEMPOTENCY_KEY_PROCESSING);
         }
     }
 
-    public void complete(Long userId, String endpoint, String idempotencyKey, int responseHttpStatus, String responseBody) {
-        boolean completed = idempotencyRepository.complete(userId, endpoint, idempotencyKey, responseHttpStatus, responseBody);
+    public void complete(Long userId, String endpoint, String idempotencyKey, int responseHttpStatus, String responseBody, Long leaseToken) {
+        boolean completed = idempotencyRepository.complete(userId, endpoint, idempotencyKey, responseHttpStatus, responseBody, leaseToken);
         if (!completed) {
             throw new BusinessException(ErrorCode.IDEMPOTENCY_KEY_PROCESSING);
         }
     }
 
-    public void release(Long userId, String endpoint, String idempotencyKey) {
-        idempotencyRepository.release(userId, endpoint, idempotencyKey);
+    public void release(Long userId, String endpoint, String idempotencyKey, Long leaseToken) {
+        idempotencyRepository.release(userId, endpoint, idempotencyKey, leaseToken);
     }
 
     public void validateIdempotencyKey(String idempotencyKey) {

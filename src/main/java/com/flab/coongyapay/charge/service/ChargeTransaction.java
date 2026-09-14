@@ -28,7 +28,7 @@ public class ChargeTransaction {
     private final ObjectMapper objectMapper;
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
-    public ChargeResult commitReceipt(Long userId, String endpoint, String idempotencyKey, Long accountId, BigDecimal amount, String remark) {
+    public ChargeResult commitReceipt(Long userId, String endpoint, String idempotencyKey, Long accountId, BigDecimal amount, String remark, Long leaseToken) throws BusinessException {
         // 1. wallet 단위 비관적 락
         Wallet wallet = walletRepository.findByUserIdForUpdate(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR));
@@ -45,7 +45,7 @@ public class ChargeTransaction {
 
         // 4. 멱등키 COMPLETED + 202 Accepted 응답 캐시
         String body = serialize(ChargeResponse.from(savedTransaction));
-        idempotencyService.complete(userId, endpoint, idempotencyKey, HttpStatus.ACCEPTED.value(), body);
+        idempotencyService.complete(userId, endpoint, idempotencyKey, HttpStatus.ACCEPTED.value(), body, leaseToken);
 
         return ChargeResult.fresh(savedTransaction.getId());
     }
