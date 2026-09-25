@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 @Mapper
 public interface BankAccountMapper {
@@ -17,5 +18,9 @@ public interface BankAccountMapper {
 
     List<BankAccountDto> findActiveByUserId(@Param("userId") Long userId);
 
-    int softDelete(@Param("id") Long id, @Param("userId") Long userId);
+    Optional<BankAccountDto> findActiveByIdAndUserId(@Param("bankAccountId") Long bankAccountId, @Param("userId") Long userId);
+
+    Optional<BankAccountDto> findById(@Param("bankAccountId") Long bankAccountId);
+
+    int softDelete(@Param("bankAccountId") Long bankAccountId, @Param("userId") Long userId);
 }

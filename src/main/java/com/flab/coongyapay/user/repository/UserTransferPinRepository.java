@@ -7,6 +7,8 @@ import com.flab.coongyapay.user.mapper.dto.UserTransferPinDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 @RequiredArgsConstructor
 public class UserTransferPinRepository {
@@ -18,5 +20,15 @@ public class UserTransferPinRepository {
         UserTransferPinDto userTransferPinDto = userTransferPinAssembler.toDto(userTransferPin);
         userTransferPinMapper.insert(userTransferPinDto);
         return userTransferPinAssembler.toDomain(userTransferPinDto);
+    }
+
+    public Optional<UserTransferPin> findByUserIdForUpdate(Long userId) {
+        return userTransferPinMapper.findByUserIdForUpdate(userId)
+                .map(userTransferPinAssembler::toDomain);
+    }
+
+    public int update(UserTransferPin userTransferPin) {
+        UserTransferPinDto dto = userTransferPinAssembler.toDto(userTransferPin);
+        return userTransferPinMapper.update(dto);
     }
 }

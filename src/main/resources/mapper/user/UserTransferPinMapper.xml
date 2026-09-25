@@ -9,4 +9,16 @@
         VALUES (#{userId}, #{transferPin}, #{failedTransferPinCount}, #{lockedUntil})
     </insert>
 
+    <select id="findByUserIdForUpdate" resultType="com.flab.coongyapay.user.mapper.dto.UserTransferPinDto">
+        SELECT id, user_id, transfer_pin, failed_transfer_pin_count, locked_until
+        FROM user_transfer_pin
+        WHERE user_id = #{userId}
+        FOR UPDATE
+    </select>
+
+    <update id="update">
+        UPDATE user_transfer_pin
+           SET failed_transfer_pin_count = #{failedTransferPinCount}, locked_until = #{lockedUntil}
+         WHERE id = #{id}
+    </update>
 </mapper>
