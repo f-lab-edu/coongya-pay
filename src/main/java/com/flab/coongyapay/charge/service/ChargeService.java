@@ -19,6 +19,7 @@ import com.flab.coongyapay.user.service.UserTransferPinVerifier;
 import com.flab.coongyapay.wallet.domain.Wallet;
 import com.flab.coongyapay.wallet.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.core.JacksonException;
@@ -26,6 +27,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChargeService {
@@ -102,7 +104,11 @@ public class ChargeService {
         }
 
         // 6. 커밋 후 fast-path 트리거(best-effort). 실패해도 스케줄 워커가 처리.
-        chargeDispatcher.dispatchAsync();
+        try {
+            chargeDispatcher.dispatchAsync();
+        } catch (RuntimeException e) {
+            log.warn("Charge fast-path dispatch failed; scheduled worker will retry", e);
+        }
         return result;
     }
 
