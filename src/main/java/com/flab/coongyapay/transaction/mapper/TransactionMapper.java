@@ -43,7 +43,6 @@ public interface TransactionMapper {
                            @Param("expectedStatus") String expectedStatus,
                            @Param("newStatus") String newStatus,
                            @Param("failureReason") String failureReason,
-                           @Param("completedAt") LocalDateTime completedAt,
                            @Param("leaseToken") long leaseToken);
 
     int scheduleRetry(@Param("id") Long id,

@@ -73,9 +73,9 @@ public class TransactionRepository {
      * 펜싱 CAS 전이. 선점한 lease_token일 때만 전이 → 재선점된 스테일 워커의 쓰기 차단.
      */
     public boolean updateStatusFenced(Long id, TransactionStatus expected, TransactionStatus next,
-                                      TransactionFailureReason failureReason, LocalDateTime completedAt, long leaseToken) {
+                                      TransactionFailureReason failureReason, long leaseToken) {
         return transactionMapper.updateStatusFenced(id, expected.name(), next.name(),
-                failureReason == null ? null : failureReason.name(), completedAt, leaseToken) == 1;
+                failureReason == null ? null : failureReason.name(), leaseToken) == 1;
     }
 
     public boolean scheduleRetry(Long id, int backoffSeconds, long leaseToken) {

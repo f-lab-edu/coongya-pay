@@ -91,7 +91,7 @@
         UPDATE transaction
            SET status = #{newStatus},
                failure_reason = #{failureReason},
-               completed_at = #{completedAt}
+               completed_at = NOW()
          WHERE id = #{id}
            AND status = #{expectedStatus}
            AND lease_token = #{leaseToken}

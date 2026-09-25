@@ -67,11 +67,11 @@ public class ChargeProcessor {
         if (bankMaintenancePolicy.isMaintenanceTime()) {
             // 부작용 없음 → FAILED(BANK_MAINTENANCE)
             transactionRepository.updateStatusFenced(id, TransactionStatus.CREATED,
-                    TransactionStatus.FAILED, TransactionFailureReason.BANK_MAINTENANCE, now(), leaseToken);
+                    TransactionStatus.FAILED, TransactionFailureReason.BANK_MAINTENANCE, leaseToken);
             return;
         }
         boolean claimed = transactionRepository.updateStatusFenced(id, TransactionStatus.CREATED,
-                TransactionStatus.WITHDRAWING, null, null, leaseToken);
+                TransactionStatus.WITHDRAWING, null, leaseToken);
         if (!claimed) {
             return;
         }
@@ -89,16 +89,16 @@ public class ChargeProcessor {
                     transaction.getAmount(), externalIdempotencyKey(id));
         } catch (BankWithdrawalRejectedException e) {
             transactionRepository.updateStatusFenced(id, TransactionStatus.WITHDRAWING,
-                    TransactionStatus.FAILED, TransactionFailureReason.WITHDRAWAL_REJECTED, now(), leaseToken);
+                    TransactionStatus.FAILED, TransactionFailureReason.WITHDRAWAL_REJECTED, leaseToken);
             return;
         } catch (BankSystemException e) {
             // 결과 불명 → UNKNOWN (대사로 확정). 부작용을 확신할 수 없어 실패 처리하지 않음.
             transactionRepository.updateStatusFenced(id, TransactionStatus.WITHDRAWING,
-                    TransactionStatus.UNKNOWN, null, null, leaseToken);
+                    TransactionStatus.UNKNOWN, null, leaseToken);
             return;
         }
         transactionRepository.updateStatusFenced(id, TransactionStatus.WITHDRAWING,
-                TransactionStatus.WITHDRAWN, null, null, leaseToken);
+                TransactionStatus.WITHDRAWN, null, leaseToken);
         credit(transaction, leaseToken);
     }
 
@@ -106,7 +106,7 @@ public class ChargeProcessor {
     private void credit(Transaction transaction, long leaseToken) {
         Long id = transaction.getId();
         transactionRepository.updateStatusFenced(id, TransactionStatus.WITHDRAWN,
-                TransactionStatus.DEPOSITING, null, null, leaseToken);
+                TransactionStatus.DEPOSITING, null, leaseToken);
         try {
             chargeCreditService.credit(id, leaseToken);
         } catch (TransientDataAccessException e) {
@@ -126,7 +126,7 @@ public class ChargeProcessor {
     // 후진 복구 개시: DEPOSITING → COMPENSATING + 보상 거래 생성(UNIQUE(parent)로 이중 보상 차단)
     private void initiateCompensation(Transaction charge, long leaseToken) {
         boolean moved = transactionRepository.updateStatusFenced(charge.getId(), TransactionStatus.DEPOSITING,
-                TransactionStatus.COMPENSATING, null, null, leaseToken);
+                TransactionStatus.COMPENSATING, null, leaseToken);
         if (!moved) {
             return;
         }
@@ -154,7 +154,7 @@ public class ChargeProcessor {
         }
         if (child.get().getStatus() == TransactionStatus.COMPLETED) {
             transactionRepository.updateStatusFenced(charge.getId(), TransactionStatus.COMPENSATING,
-                    TransactionStatus.FAILED, TransactionFailureReason.REFUNDED, now(), leaseToken);
+                    TransactionStatus.FAILED, TransactionFailureReason.REFUNDED, leaseToken);
         }
     }
 
@@ -165,18 +165,18 @@ public class ChargeProcessor {
         switch (status) {
             case WITHDRAWN -> {
                 transactionRepository.updateStatusFenced(id, TransactionStatus.UNKNOWN,
-                        TransactionStatus.WITHDRAWN, null, null, leaseToken);
+                        TransactionStatus.WITHDRAWN, null, leaseToken);
                 credit(transaction, leaseToken);
             }
             case NOT_WITHDRAWN -> {
                 if (transactionRepository.isWithinFreshness(id, FRESHNESS_MINUTES)) {
                     // 미출금 확정 + freshness 이내 → 같은 키로 재출금(UNKNOWN → WITHDRAWING)
                     transactionRepository.updateStatusFenced(id, TransactionStatus.UNKNOWN,
-                            TransactionStatus.WITHDRAWING, null, null, leaseToken);
+                            TransactionStatus.WITHDRAWING, null, leaseToken);
                 } else {
                     // freshness 초과 → 예상치 못한 시점의 출금 방지 위해 실패 확정
                     transactionRepository.updateStatusFenced(id, TransactionStatus.UNKNOWN,
-                            TransactionStatus.FAILED, TransactionFailureReason.WITHDRAWAL_NOT_COMPLETED, now(), leaseToken);
+                            TransactionStatus.FAILED, TransactionFailureReason.WITHDRAWAL_NOT_COMPLETED, leaseToken);
                 }
             }
             case UNKNOWN -> {
@@ -185,7 +185,7 @@ public class ChargeProcessor {
                 RetryStateDto retry = transactionRepository.findRetryState(id);
                 if (retry.getRequeryCount() >= REQUERY_CEILING) {
                     transactionRepository.updateStatusFenced(id, TransactionStatus.UNKNOWN,
-                            TransactionStatus.NEEDS_REVIEW, null, null, leaseToken);
+                            TransactionStatus.NEEDS_REVIEW, null, leaseToken);
                 } else {
                     transactionRepository.scheduleRetry(id, backoffSeconds(retry.getRetryCount()), leaseToken);
                 }

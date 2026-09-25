@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Clock;
-import java.time.LocalDateTime;
 
 /**
  * 지갑 크레딧(로컬 원장 기록). 은행 출금이 확정된(WITHDRAWN/DEPOSITING) 거래를 지갑에 반영한다.
@@ -42,7 +41,7 @@ public class ChargeCreditService {
         // 이미 크레딧된 경우 멱등 성공: 상태만 COMPLETED로 마감 시도(펜싱)
         if (transactionEntryRepository.existsCredit(transactionId)) {
             transactionRepository.updateStatusFenced(transactionId, TransactionStatus.DEPOSITING,
-                    TransactionStatus.COMPLETED, null, LocalDateTime.now(clock), leaseToken);
+                    TransactionStatus.COMPLETED, null, leaseToken);
             return;
         }
 
@@ -66,7 +65,10 @@ public class ChargeCreditService {
         walletRepository.updateBalanceAndVersion(wallet.getId(), balanceAfter, nextSequence);
 
         // 3. 거래 완료 (DEPOSITING → COMPLETED, 펜싱)
-        transactionRepository.updateStatusFenced(transactionId, TransactionStatus.DEPOSITING,
-                TransactionStatus.COMPLETED, null, LocalDateTime.now(clock), leaseToken);
+        boolean completed = transactionRepository.updateStatusFenced(transactionId, TransactionStatus.DEPOSITING,
+                TransactionStatus.COMPLETED, null, leaseToken);
+        if (!completed) {
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
     }
 }

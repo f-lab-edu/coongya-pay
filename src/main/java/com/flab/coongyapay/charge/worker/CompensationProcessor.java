@@ -54,7 +54,7 @@ public class CompensationProcessor {
     private void startRefund(Transaction transaction, long leaseToken) {
         Long id = transaction.getId();
         boolean moved = transactionRepository.updateStatusFenced(id, TransactionStatus.CREATED,
-                TransactionStatus.REFUNDING, null, null, leaseToken);
+                TransactionStatus.REFUNDING, null, leaseToken);
         if (!moved) {
             return;
         }
@@ -72,11 +72,11 @@ public class CompensationProcessor {
         } catch (BankWithdrawalRejectedException | BankSystemException e) {
             // 환불 실패/불명 → UNKNOWN(대사로 확정). 돈을 돌려줘야 하므로 실패로 종결하지 않음.
             transactionRepository.updateStatusFenced(id, TransactionStatus.REFUNDING,
-                    TransactionStatus.UNKNOWN, null, null, leaseToken);
+                    TransactionStatus.UNKNOWN, null, leaseToken);
             return;
         }
         boolean done = transactionRepository.updateStatusFenced(id, TransactionStatus.REFUNDING,
-                TransactionStatus.COMPLETED, null, now(), leaseToken);
+                TransactionStatus.COMPLETED, null, leaseToken);
         if (done) {
             completeParent(transaction.getParentTransactionId());
         }
@@ -88,7 +88,7 @@ public class CompensationProcessor {
         switch (status) {
             case REFUNDED -> {
                 boolean done = transactionRepository.updateStatusFenced(id, TransactionStatus.UNKNOWN,
-                        TransactionStatus.COMPLETED, null, now(), leaseToken);
+                        TransactionStatus.COMPLETED, null, leaseToken);
                 if (done) {
                     completeParent(transaction.getParentTransactionId());
                 }
@@ -96,14 +96,14 @@ public class CompensationProcessor {
             case NOT_REFUNDED ->
                 // 미환불 확정 → 재환불 의도(UNKNOWN → REFUNDING). 돈은 반드시 돌려줘야 함.
                     transactionRepository.updateStatusFenced(id, TransactionStatus.UNKNOWN,
-                            TransactionStatus.REFUNDING, null, null, leaseToken);
+                            TransactionStatus.REFUNDING, null, leaseToken);
             case UNKNOWN -> {
                 transactionRepository.incrementRequeryCount(id, leaseToken);
                 RetryStateDto retry = transactionRepository.findRetryState(id);
                 if (retry.getRequeryCount() >= REQUERY_CEILING) {
                     // 상한 초과 → 수동 개입. 부모는 COMPENSATING 유지(이중 환불 방지).
                     transactionRepository.updateStatusFenced(id, TransactionStatus.UNKNOWN,
-                            TransactionStatus.NEEDS_REVIEW, null, null, leaseToken);
+                            TransactionStatus.NEEDS_REVIEW, null, leaseToken);
                 } else {
                     transactionRepository.scheduleRetry(id, backoffSeconds(retry.getRetryCount()), leaseToken);
                 }
