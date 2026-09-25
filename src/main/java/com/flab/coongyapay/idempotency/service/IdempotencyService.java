@@ -8,7 +8,6 @@ import com.flab.coongyapay.idempotency.repository.IdempotencyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -64,7 +63,9 @@ public class IdempotencyService {
             throw new BusinessException(ErrorCode.INVALID_IDEMPOTENCY_KEY);
         }
         try {
-            if (UUID.fromString(idempotencyKey).version() != RANDOM_UUID_VERSION) {
+            UUID uuid = UUID.fromString(idempotencyKey);
+            if (uuid.version() != RANDOM_UUID_VERSION
+                || !uuid.toString().equals(idempotencyKey)) {
                 throw new BusinessException(ErrorCode.INVALID_IDEMPOTENCY_KEY);
             }
         } catch (IllegalArgumentException e) {

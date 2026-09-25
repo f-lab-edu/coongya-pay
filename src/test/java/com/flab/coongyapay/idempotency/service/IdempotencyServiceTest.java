@@ -5,13 +5,13 @@ import com.flab.coongyapay.common.exception.ErrorCode;
 import com.flab.coongyapay.idempotency.domain.IdempotencyRecord;
 import com.flab.coongyapay.idempotency.enums.IdempotencyStatus;
 import com.flab.coongyapay.idempotency.repository.IdempotencyRepository;
-import com.github.dockerjava.zerodep.shaded.org.apache.hc.core5.http.HttpStatus;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -40,6 +40,7 @@ class IdempotencyServiceTest {
         ClaimResult result = idempotencyService.claim(1L, ENDPOINT, KEY, HASH);
 
         Assertions.assertThat(result.isReplayed()).isFalse();
+        Assertions.assertThat(result.getLeaseToken()).isEqualTo(0L);
         verify(idempotencyRepository, never()).findByPk(any(), any(), any());
         verify(idempotencyRepository, never()).reclaim(any(), any(), any());
     }
@@ -60,24 +61,27 @@ class IdempotencyServiceTest {
     @Test
     void 완료된_키면_캐시응답반환() {
         when(idempotencyRepository.tryInsertProcessing(any())).thenReturn(false);
-        when(idempotencyRepository.findByPk(1L, ENDPOINT, KEY)).thenReturn(Optional.of(record(HASH, IdempotencyStatus.COMPLETED, HttpStatus.SC_ACCEPTED, RESPONSE_BODY, 0L)));
+        when(idempotencyRepository.findByPk(1L, ENDPOINT, KEY)).thenReturn(Optional.of(record(HASH, IdempotencyStatus.COMPLETED, HttpStatus.ACCEPTED.value(), RESPONSE_BODY, 0L)));
 
         ClaimResult result = idempotencyService.claim(1L, ENDPOINT, KEY, HASH);
 
         Assertions.assertThat(result.isReplayed()).isTrue();
-        Assertions.assertThat(result.getResponseHttpStatus()).isEqualTo(HttpStatus.SC_ACCEPTED);
+        Assertions.assertThat(result.getResponseHttpStatus()).isEqualTo(HttpStatus.ACCEPTED.value());
         Assertions.assertThat(result.getCachedResponseBody()).isEqualTo(RESPONSE_BODY);
     }
 
     @Test
     void 처리중_키_reclaim_성공시_newRequest_반환() {
         when(idempotencyRepository.tryInsertProcessing(any())).thenReturn(false);
-        when(idempotencyRepository.findByPk(1L, ENDPOINT, KEY)).thenReturn(Optional.of(record(HASH, IdempotencyStatus.PROCESSING, null, null, 0L)));
+        when(idempotencyRepository.findByPk(1L, ENDPOINT, KEY)).thenReturn(Optional.of(record(HASH, IdempotencyStatus.PROCESSING, null, null, 0L)),
+                Optional.of(record(HASH, IdempotencyStatus.PROCESSING, null, null, 1L)));
         when(idempotencyRepository.reclaim(1L, ENDPOINT, KEY)).thenReturn(true);
 
         ClaimResult result = idempotencyService.claim(1L, ENDPOINT, KEY, HASH);
 
+        verify(idempotencyRepository, times(2)).findByPk(1L, ENDPOINT, KEY);
         Assertions.assertThat(result.isReplayed()).isFalse();
+        Assertions.assertThat(result.getLeaseToken()).isEqualTo(1L);
         Assertions.assertThat(result.getResponseHttpStatus()).isNull();
         Assertions.assertThat(result.getCachedResponseBody()).isNull();
     }
@@ -127,6 +131,15 @@ class IdempotencyServiceTest {
         Assertions.assertThatCode(() -> {
             idempotencyService.validateIdempotencyKey(UUID.randomUUID().toString());
         }).doesNotThrowAnyException();
+    }
+
+    @Test
+    void 멱등키_파싱_실패시_INVALID_IDEMPOTENCY_KEY_던짐() {
+        Assertions.assertThatThrownBy(() -> {
+            idempotencyService.validateIdempotencyKey("not-a-UUID");
+        })
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.INVALID_IDEMPOTENCY_KEY);
     }
 
     private IdempotencyRecord record(String hash, IdempotencyStatus status, Integer responseHttpStatus, String responseBody, Long leaseToken) {
