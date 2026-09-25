@@ -9,8 +9,8 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 
 /**
- * 실제 은행 연동을 대체하는 Stub. 기본 동작은 성공이며, 테스트는 시나리오를 주입해
- * 거절(4xx)/불명(timeout·5xx)/대사 결과를 재현할 수 있다.
+ * 실제 은행 연동을 대체하는 Stub.
+ * 기본 동작은 성공이며, 테스트는 시나리오를 주입해 거절(4xx)/불명(timeout·5xx)/대사 결과를 재현할 수 있다.
  */
 @Slf4j
 @Component
@@ -29,7 +29,7 @@ public class StubBankClient implements BankClient {
 
     @Override
     public void verify(String bankCode, String accountNumber, String accountHolderName) {
-        log.info("Bank account verified: bank code={}, account number={}, account holder name={}", bankCode, accountNumber, accountHolderName);
+        log.info("Bank account verified");
     }
 
     @Override
@@ -37,7 +37,7 @@ public class StubBankClient implements BankClient {
         if (bankMaintenancePolicy.isMaintenanceTime()) {
             throw new BusinessException(ErrorCode.BANK_MAINTENANCE);
         }
-        log.info("Validate withdrawal: bankCode={}, account number={}", bankCode, accountNumber);
+        log.info("Validate withdrawal");
     }
 
     @Override
@@ -47,8 +47,8 @@ public class StubBankClient implements BankClient {
                     "Withdrawal rejected by bank: key=" + externalIdempotencyKey);
             case UNCLEAR -> throw new BankSystemException(
                     "Withdrawal result unclear (timeout/5xx): key=" + externalIdempotencyKey);
-            default -> log.info("Withdraw success: bankCode={}, accountNumber={}, amount={}, key={}",
-                    bankCode, accountNumber, amount, externalIdempotencyKey);
+            default -> log.info("Withdraw success: amount={}, key={}",
+                    amount, externalIdempotencyKey);
         }
     }
 
@@ -65,8 +65,8 @@ public class StubBankClient implements BankClient {
                     "Refund rejected by bank: key=" + externalIdempotencyKey);
             case UNCLEAR -> throw new BankSystemException(
                     "Refund result unclear (timeout/5xx): key=" + externalIdempotencyKey);
-            default -> log.info("Refund success: bankCode={}, accountNumber={}, amount={}, key={}",
-                    bankCode, accountNumber, amount, externalIdempotencyKey);
+            default -> log.info("Refund success: amount={}, key={}",
+                    amount, externalIdempotencyKey);
         }
     }
 
