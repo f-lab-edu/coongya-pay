@@ -90,6 +90,10 @@ public class TransactionRepository {
         return transactionMapper.findRetryState(id);
     }
 
+    public boolean isWithinFreshness(Long id, int minutes) {
+        return transactionMapper.isWithinFreshness(id, minutes);
+    }
+
     public void assignExternalIdempotencyKey(Long id, String externalIdempotencyKey) {
         transactionMapper.assignExternalIdempotencyKey(id, externalIdempotencyKey);
     }

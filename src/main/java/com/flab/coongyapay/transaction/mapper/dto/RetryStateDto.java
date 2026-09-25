@@ -18,6 +18,5 @@ public class RetryStateDto {
     private int retryCount;
     private int maxRetries;
     private int requeryCount;
-    private LocalDateTime firstAttemptAt;
     private String externalIdempotencyKey;
 }

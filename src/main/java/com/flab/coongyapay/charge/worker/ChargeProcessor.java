@@ -2,11 +2,7 @@ package com.flab.coongyapay.charge.worker;
 
 import com.flab.coongyapay.account.domain.BankAccount;
 import com.flab.coongyapay.account.repository.BankAccountRepository;
-import com.flab.coongyapay.bank.BankClient;
-import com.flab.coongyapay.bank.BankSystemException;
-import com.flab.coongyapay.bank.BankWithdrawalRejectedException;
-import com.flab.coongyapay.bank.BankWithdrawalStatus;
-import com.flab.coongyapay.bank.BankMaintenancePolicy;
+import com.flab.coongyapay.bank.*;
 import com.flab.coongyapay.charge.service.ChargeCreditService;
 import com.flab.coongyapay.common.exception.BusinessException;
 import com.flab.coongyapay.common.exception.ErrorCode;
@@ -22,7 +18,6 @@ import org.springframework.dao.TransientDataAccessException;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -174,8 +169,7 @@ public class ChargeProcessor {
                 credit(transaction, leaseToken);
             }
             case NOT_WITHDRAWN -> {
-                RetryStateDto retry = transactionRepository.findRetryState(id);
-                if (isFresh(retry.getFirstAttemptAt())) {
+                if (transactionRepository.isWithinFreshness(id, FRESHNESS_MINUTES)) {
                     // 미출금 확정 + freshness 이내 → 같은 키로 재출금(UNKNOWN → WITHDRAWING)
                     transactionRepository.updateStatusFenced(id, TransactionStatus.UNKNOWN,
                             TransactionStatus.WITHDRAWING, null, null, leaseToken);
@@ -197,13 +191,6 @@ public class ChargeProcessor {
                 }
             }
         }
-    }
-
-    private boolean isFresh(LocalDateTime firstAttemptAt) {
-        if (firstAttemptAt == null) {
-            return true;
-        }
-        return Duration.between(firstAttemptAt, now()).toMinutes() <= FRESHNESS_MINUTES;
     }
 
     private int backoffSeconds(int retryCount) {

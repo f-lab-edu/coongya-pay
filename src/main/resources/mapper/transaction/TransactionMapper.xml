@@ -117,7 +117,17 @@
 
     <select id="findRetryState" resultType="com.flab.coongyapay.transaction.mapper.dto.RetryStateDto">
         SELECT retry_count, max_retries, requery_count,
-               first_attempt_at AS firstAttemptAt, external_idempotency_key AS externalIdempotencyKey
+               external_idempotency_key AS externalIdempotencyKey
+        FROM transaction
+        WHERE id = #{id}
+    </select>
+
+    <select id="isWithinFreshness" resultType="boolean">
+        SELECT CASE WHEN first_attempt_at IS NULL
+                    OR first_attempt_at >= DATE_SUB(NOW(), INTERVAL #{minutes} MINUTE)
+                THEN true
+                ELSE false
+                END
         FROM transaction
         WHERE id = #{id}
     </select>

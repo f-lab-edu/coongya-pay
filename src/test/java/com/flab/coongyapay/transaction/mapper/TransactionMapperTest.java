@@ -9,8 +9,10 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @MybatisTest
@@ -20,6 +22,8 @@ class TransactionMapperTest {
     private TransactionMapper transactionMapper;
     @Autowired
     private WalletMapper walletMapper;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @Test
     void insert_성공하면_id_자동채번() {
@@ -144,6 +148,21 @@ class TransactionMapperTest {
         Optional<TransactionDto> userWithdrawalTransaction = transactionMapper.findChargeByIdAndUserId(dto.getId(), 1L);
 
         Assertions.assertThat(userWithdrawalTransaction).isNotPresent();
+    }
+
+    @Test
+    void isWithinFreshness는_30분_이내에는_true_반환() {
+        TransactionDto dto = getDto();
+        transactionMapper.insert(dto);
+        Assertions.assertThat(transactionMapper.isWithinFreshness(dto.getId(), 30)).isTrue();
+    }
+
+    @Test
+    void isWithinFreshness는_30분_초과시에는_false_반환() {
+        TransactionDto dto = getDto();
+        transactionMapper.insert(dto);
+        jdbcTemplate.update("update transaction set first_attempt_at = DATE_SUB(NOW(), INTERVAL 31 MINUTE) where id = ?", dto.getId());
+        Assertions.assertThat(transactionMapper.isWithinFreshness(dto.getId(), 30)).isFalse();
     }
 
     private static TransactionDto getDto() {

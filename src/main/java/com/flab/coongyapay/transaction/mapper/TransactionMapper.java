@@ -54,6 +54,8 @@ public interface TransactionMapper {
 
     RetryStateDto findRetryState(@Param("id") Long id);
 
+    boolean isWithinFreshness(@Param("id") Long id, @Param("minutes") int minutes);
+
     void assignExternalIdempotencyKey(@Param("id") Long id,
                                       @Param("externalIdempotencyKey") String externalIdempotencyKey);
 }
