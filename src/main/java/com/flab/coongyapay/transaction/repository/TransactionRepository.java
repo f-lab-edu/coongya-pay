@@ -64,9 +64,9 @@ public class TransactionRepository {
      * CAS 상태 전이(비펜싱). 동기 단계/단일 워커 경로용.
      */
     public boolean updateStatus(Long id, TransactionStatus expected, TransactionStatus next,
-                                TransactionFailureReason failureReason, LocalDateTime completedAt) {
+                                TransactionFailureReason failureReason) {
         return transactionMapper.updateStatus(id, expected.name(), next.name(),
-                failureReason == null ? null : failureReason.name(), completedAt) == 1;
+                failureReason == null ? null : failureReason.name()) == 1;
     }
 
     /**

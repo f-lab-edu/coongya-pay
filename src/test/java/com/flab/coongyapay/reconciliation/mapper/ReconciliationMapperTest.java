@@ -31,7 +31,7 @@ class ReconciliationMapperTest {
         TransactionDto withdrawing = chargeDto(TransactionStatus.CREATED);
         transactionMapper.insert(withdrawing);
         transactionMapper.updateStatus(withdrawing.getId(), TransactionStatus.CREATED.name(),
-                TransactionStatus.WITHDRAWING.name(), null, null);
+                TransactionStatus.WITHDRAWING.name(), null);
 
         int expired = reconciliationMapper.expireIdleCreatedCharges(0);
 

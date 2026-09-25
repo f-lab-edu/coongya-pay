@@ -6,7 +6,6 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,8 +35,7 @@ public interface TransactionMapper {
     int updateStatus(@Param("id") Long id,
                      @Param("expectedStatus") String expectedStatus,
                      @Param("newStatus") String newStatus,
-                     @Param("failureReason") String failureReason,
-                     @Param("completedAt") LocalDateTime completedAt);
+                     @Param("failureReason") String failureReason);
 
     int updateStatusFenced(@Param("id") Long id,
                            @Param("expectedStatus") String expectedStatus,

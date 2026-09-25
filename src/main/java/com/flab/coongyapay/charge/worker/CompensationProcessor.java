@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
-import java.time.LocalDateTime;
 
 /**
  * 보상(환불) 거래 상태머신 B.
@@ -117,15 +116,11 @@ public class CompensationProcessor {
             return;
         }
         transactionRepository.updateStatus(parentTransactionId, TransactionStatus.COMPENSATING,
-                TransactionStatus.FAILED, TransactionFailureReason.REFUNDED, now());
+                TransactionStatus.FAILED, TransactionFailureReason.REFUNDED);
     }
 
     private int backoffSeconds(int retryCount) {
         return BASE_BACKOFF_SECONDS * (1 << Math.min(retryCount, 3));
-    }
-
-    private LocalDateTime now() {
-        return LocalDateTime.now(clock);
     }
 
     private String externalIdempotencyKey(Long transactionId) {

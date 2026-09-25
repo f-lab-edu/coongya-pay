@@ -3,6 +3,10 @@
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.flab.coongyapay.transaction.mapper.TransactionMapper">
 
+    <sql id="completedAt">
+        CASE WHEN #{newStatus} IN ('COMPLETED', 'FAILED', 'EXPIRED') THEN NOW() ELSE NULL END
+    </sql>
+
     <sql id="columns">
         id, wallet_id, account_id, transaction_type, parent_transaction_id, amount, status, remark, failure_reason, created_at, completed_at
     </sql>
@@ -81,7 +85,7 @@
         UPDATE transaction
            SET status = #{newStatus},
                failure_reason = #{failureReason},
-               completed_at = #{completedAt}
+               completed_at = <include refid="completedAt"/>
          WHERE id = #{id}
            AND status = #{expectedStatus}
     </update>
@@ -91,7 +95,7 @@
         UPDATE transaction
            SET status = #{newStatus},
                failure_reason = #{failureReason},
-               completed_at = NOW()
+               completed_at = <include refid="completedAt"/>
          WHERE id = #{id}
            AND status = #{expectedStatus}
            AND lease_token = #{leaseToken}
