@@ -1,8 +1,13 @@
 spring:
   application:
     name: coongyapay
+  task:
+    scheduling:
+      pool:
+        size: 5
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   configuration:
     map-underscore-to-camel-case: true
+
