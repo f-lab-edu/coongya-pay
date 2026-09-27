@@ -2,6 +2,7 @@ package com.flab.coongyapay.charge.worker;
 
 import com.flab.coongyapay.account.domain.BankAccount;
 import com.flab.coongyapay.account.repository.BankAccountRepository;
+import com.flab.coongyapay.bank.BankClient;
 import com.flab.coongyapay.transaction.domain.Transaction;
 import com.flab.coongyapay.transaction.domain.TransactionEntry;
 import com.flab.coongyapay.transaction.enums.TransactionEntryType;
@@ -14,13 +15,17 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
-// @Transactional: 커밋된 데이터가 공유 Testcontainer를 오염시켜 @MybatisTest와 충돌하는 것을 방지(테스트 후 롤백).
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 @SpringBootTest
+// @Transactional: 커밋된 데이터가 공유 Testcontainer를 오염시켜 @MybatisTest와 충돌하는 것을 방지(테스트 후 롤백)
 @Transactional
 class ChargeProcessorIntegrationTest {
 
@@ -30,6 +35,8 @@ class ChargeProcessorIntegrationTest {
     @Autowired private BankAccountRepository bankAccountRepository;
     @Autowired private TransactionRepository transactionRepository;
     @Autowired private TransactionEntryRepository transactionEntryRepository;
+
+    @MockitoBean private BankClient bankClient;
 
     @Test
     void 선점_후_처리하면_잔액이_증가하고_COMPLETED된다() {
@@ -108,6 +115,36 @@ class ChargeProcessorIntegrationTest {
                 .isSameAs(TransactionStatus.COMPLETED);
         Assertions.assertThat(walletRepository.findByUserId(userId).orElseThrow().getBalance())
                 .isEqualByComparingTo(amount);
+    }
+
+    @Test
+    void 은행_호출_도중_lease가_탈취되어도_중복_처리되지_않는다() {
+        Long userId = uniqueUserId();
+        Wallet wallet = walletRepository.save(Wallet.create(userId));
+        BankAccount account = bankAccountRepository.save(BankAccount.create(userId, "088", "1112223334448", "김쿵야"));
+        BigDecimal amount = BigDecimal.valueOf(30_000);
+        Transaction created = transactionRepository.save(
+                Transaction.createCharge(wallet.getId(), account.getId(), amount, "쿵야"));
+
+        // 워커 A가 선점 → staleToken
+        long staleToken = claimLeaseToken(created.getId());
+        // 은행 호출 중 워커 중단
+        doThrow(new RuntimeException()).doNothing().when(bankClient).withdraw(any(), any(), any(), any());
+
+        Assertions.assertThatThrownBy(() -> chargeProcessor.process(created.getId(), staleToken))
+                .isInstanceOf(RuntimeException.class);
+
+        // 리스 만료 후 워커 B가 재선점 → lease_token 증가
+        transactionRepository.acquireLease(created.getId(), 30);
+        long freshToken = transactionRepository.findLeaseToken(created.getId());
+        Assertions.assertThat(freshToken).isGreaterThan(staleToken);
+
+        chargeProcessor.process(created.getId(), freshToken);
+
+        verify(bankClient, times(2)).withdraw(any(), any(), any(), eq("charge-" + created.getId()));
+        Assertions.assertThat(transactionRepository.findById(created.getId()).orElseThrow().getStatus()).isEqualTo(TransactionStatus.COMPLETED);
+        Assertions.assertThat(walletRepository.findByUserId(userId).orElseThrow().getBalance()).isEqualByComparingTo(amount);
+        Assertions.assertThat(transactionEntryRepository.findByTransactionIdAndEntryType(created.getId(), TransactionEntryType.CREDIT)).isPresent();
     }
 
     private long claimLeaseToken(Long transactionId) {
