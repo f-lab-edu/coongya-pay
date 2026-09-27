@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 @ConditionalOnProperty(name = "charge.worker.enabled", havingValue = "true", matchIfMissing = true)
 public class ReconciliationService {
 
-    private static final int WINDOW_SIZE = 600;
+    private static final int WINDOW_SIZE = 60;
     private static final int IDLE_EXPIRE_SECONDS = 600;       // CREATED 유휴 만료 임계(10분)
     private static final int NON_TERMINAL_DWELL_MINUTES = 5;  // 체류 경보 임계
 
