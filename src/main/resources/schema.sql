@@ -39,7 +39,8 @@ CREATE TABLE IF NOT EXISTS `wallet` (
     `created_at` DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_wallet_user_id` (`user_id`)
+    UNIQUE KEY `uk_wallet_user_id` (`user_id`),
+    INDEX `idx_wallet_updated_at` (`updated_at`)
 ) ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_0900_ai_ci;
@@ -111,7 +112,8 @@ CREATE TABLE IF NOT EXISTS `transaction` (
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_compensation_parent` (`parent_transaction_id`),
     INDEX `idx_tx_wallet_id` (`wallet_id`),
-    INDEX `idx_tx_claim` (`status`, `next_retry_at`)
+    INDEX `idx_tx_claim` (`status`, `next_retry_at`),
+    INDEX `idx_tx_completed_at` (`completed_at`)
 ) ENGINE = InnoDB
     DEFAULT CHARSET = utf8mb4
     COLLATE = utf8mb4_0900_ai_ci;

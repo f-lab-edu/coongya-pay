@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 @ConditionalOnProperty(name = "charge.worker.enabled", havingValue = "true", matchIfMissing = true)
 public class ReconciliationService {
 
+    private static final int WINDOW_SIZE = 600;
     private static final int IDLE_EXPIRE_SECONDS = 600;       // CREATED 유휴 만료 임계(10분)
     private static final int NON_TERMINAL_DWELL_MINUTES = 5;  // 체류 경보 임계
 
@@ -34,13 +35,23 @@ public class ReconciliationService {
 
     // 내부 3-테이블 불변식 검증 (위반=인시던트)
     @Scheduled(fixedDelayString = "${reconciliation.invariant-delay-ms:300000}")
-    public void verifyInvariants() {
-        int balanceMismatch = reconciliationMapper.countBalanceMismatches();
-        int versionViolation = reconciliationMapper.countVersionIntegrityViolations();
-        int creditViolation = reconciliationMapper.countCompletedChargesWithoutSingleCredit();
+    public void verifyInvariantsIncremental() {
+        verifyInvariants(WINDOW_SIZE, "incremental");
+    }
+
+    // 내부 3-테이블 불변식 검증 (위반=인시던트)
+    @Scheduled(cron = "${reconciliation.full-audit-cron:0 0 6 * * *}")
+    public void verifyInvariantsFull() {
+        verifyInvariants(null, "full");
+    }
+
+    private void verifyInvariants(Integer minutes, String name) {
+        int balanceMismatch = reconciliationMapper.countBalanceMismatches(minutes);
+        int versionViolation = reconciliationMapper.countVersionIntegrityViolations(minutes);
+        int creditViolation = reconciliationMapper.countCompletedChargesWithoutSingleCredit(minutes);
         if (balanceMismatch > 0 || versionViolation > 0 || creditViolation > 0) {
-            log.error("Reconciliation INVARIANT VIOLATION: balanceMismatch={}, versionViolation={}, completedChargeCreditViolation={}",
-                    balanceMismatch, versionViolation, creditViolation);
+            log.error("Reconciliation INVARIANT VIOLATION: name={}, balanceMismatch={}, versionViolation={}, completedChargeCreditViolation={}",
+                    name, balanceMismatch, versionViolation, creditViolation);
         }
     }
 

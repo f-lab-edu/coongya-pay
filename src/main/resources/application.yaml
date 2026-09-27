@@ -4,7 +4,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 5
+        size: 6
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml

@@ -10,11 +10,11 @@ public interface ReconciliationMapper {
     int expireIdleCreatedCharges(@Param("idleSeconds") int idleSeconds);
 
     // 내부 정합성 불변식 위반 건수 (0이 정상)
-    int countBalanceMismatches();
+    int countBalanceMismatches(@Param("minutes") Integer minutes);
 
-    int countVersionIntegrityViolations();
+    int countVersionIntegrityViolations(@Param("minutes") Integer minutes);
 
-    int countCompletedChargesWithoutSingleCredit();
+    int countCompletedChargesWithoutSingleCredit(@Param("minutes") Integer minutes);
 
     // 모니터링 지표
     int countNonTerminalOlderThanMinutes(@Param("minutes") int minutes);

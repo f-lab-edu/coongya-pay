@@ -45,30 +45,30 @@ class ReconciliationMapperTest {
 
     @Test
     void countCompletedChargesWithoutSingleCredit_CREDIT없는_COMPLETED충전_탐지() {
-        int before = reconciliationMapper.countCompletedChargesWithoutSingleCredit();
+        int before = reconciliationMapper.countCompletedChargesWithoutSingleCredit(null);
 
         TransactionDto completed = chargeDto(TransactionStatus.COMPLETED);
         transactionMapper.insert(completed);
 
         // CREDIT 원장 없음 → 위반 +1
-        Assertions.assertThat(reconciliationMapper.countCompletedChargesWithoutSingleCredit() - before)
+        Assertions.assertThat(reconciliationMapper.countCompletedChargesWithoutSingleCredit(null) - before)
                 .isEqualTo(1);
 
         // CREDIT 1개 추가 → 위반 해소
         transactionEntryMapper.insert(new TransactionEntryDto(null, completed.getId(), 1L,
                 TransactionEntryType.CREDIT.name(), BigDecimal.ONE, BigDecimal.ONE, 1L, null));
-        Assertions.assertThat(reconciliationMapper.countCompletedChargesWithoutSingleCredit() - before)
+        Assertions.assertThat(reconciliationMapper.countCompletedChargesWithoutSingleCredit(null) - before)
                 .isEqualTo(0);
     }
 
     @Test
     void countBalanceMismatches_원장없이_잔액이_0아니면_불일치() {
-        int before = reconciliationMapper.countBalanceMismatches();
+        int before = reconciliationMapper.countBalanceMismatches(10);
 
         // 원장이 없는데 잔액 100 → 마지막 balance_after(=0)와 불일치
         walletMapper.insert(new WalletDto(null, uniqueUserId(), BigDecimal.valueOf(100), 0));
 
-        Assertions.assertThat(reconciliationMapper.countBalanceMismatches() - before).isEqualTo(1);
+        Assertions.assertThat(reconciliationMapper.countBalanceMismatches(10) - before).isEqualTo(1);
     }
 
     private TransactionDto chargeDto(TransactionStatus status) {

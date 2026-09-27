@@ -22,6 +22,9 @@
              WHERE te.wallet_id = w.id
              ORDER BY te.wallet_sequence DESC
              LIMIT 1), 0)
+        <if test="minutes != null">
+            AND w.updated_at >= DATE_SUB(NOW(), INTERVAL #{minutes} MINUTE)
+        </if>
     </select>
 
     <!-- wallet.version == MAX(wallet_sequence) == COUNT(entries) (순번 무결·무결점) -->
@@ -31,6 +34,9 @@
         WHERE w.version &lt;&gt; COALESCE((SELECT MAX(te.wallet_sequence) FROM transaction_entry te WHERE te.wallet_id = w.id), 0)
            OR COALESCE((SELECT MAX(te.wallet_sequence) FROM transaction_entry te WHERE te.wallet_id = w.id), 0)
               &lt;&gt; (SELECT COUNT(*) FROM transaction_entry te WHERE te.wallet_id = w.id)
+        <if test="minutes != null">
+            AND w.updated_at >= DATE_SUB(NOW(), INTERVAL #{minutes} MINUTE)
+        </if>
     </select>
 
     <!-- COMPLETED CHARGE ↔ 정확히 1개의 CREDIT 원장 -->
@@ -41,6 +47,9 @@
           AND t.status = 'COMPLETED'
           AND (SELECT COUNT(*) FROM transaction_entry te
                WHERE te.transaction_id = t.id AND te.entry_type = 'CREDIT') &lt;&gt; 1
+        <if test="minutes != null">
+            AND t.completed_at >= DATE_SUB(NOW(), INTERVAL #{minutes} MINUTE)
+        </if>
     </select>
 
     <select id="countNonTerminalOlderThanMinutes" resultType="int">
