@@ -46,6 +46,14 @@ class TransactionTest {
     }
 
     @Test
+    void createCharge_금액_소수점_입력시_INVALID_CHARGE_AMOUNT_던짐() {
+        Assertions.assertThatThrownBy(() -> {
+            Transaction.createCharge(1L, 1L, BigDecimal.valueOf(1.9), "김쿵야");
+        }).isInstanceOf(BusinessException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.INVALID_CHARGE_AMOUNT);
+    }
+
+    @Test
     void createCharge_remark_길이_7자_초과면_INVALID_REMARK_LENGTH_던짐() {
         Assertions.assertThatThrownBy(() -> {
             Transaction.createCharge(1L, 1L, BigDecimal.ONE, "일이삼사오육칠팔");

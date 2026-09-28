@@ -44,7 +44,8 @@ public class Transaction {
     }
 
     public static Transaction createCharge(Long walletId, Long accountId, BigDecimal amount, String remark) {
-        if (amount == null || amount.compareTo(MINIMUM_CHARGE_AMOUNT_LIMIT) < 0 || amount.compareTo(MAXIMUM_CHARGE_AMOUNT_LIMIT) > 0) {
+        if (amount == null || amount.compareTo(MINIMUM_CHARGE_AMOUNT_LIMIT) < 0 || amount.compareTo(MAXIMUM_CHARGE_AMOUNT_LIMIT) > 0
+            || amount.stripTrailingZeros().scale() > 0) {
             throw new BusinessException(ErrorCode.INVALID_CHARGE_AMOUNT);
         }
 

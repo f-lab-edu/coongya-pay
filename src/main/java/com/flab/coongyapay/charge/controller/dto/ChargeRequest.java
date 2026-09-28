@@ -17,6 +17,7 @@ public class ChargeRequest {
     @NotNull(message = "FIELD_REQUIRED")
     @DecimalMin(value = "1", message = "INVALID_CHARGE_AMOUNT")
     @DecimalMax(value = "2000000", message = "INVALID_CHARGE_AMOUNT")
+    @Digits(integer = 15, fraction = 0)
     private BigDecimal amount;
 
     @Size(min = 1, max = 7, message = "INVALID_REMARK_LENGTH")
