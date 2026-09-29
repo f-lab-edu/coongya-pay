@@ -40,6 +40,21 @@ public enum ErrorCode {
     //Bank
     BANK_SYSTEM_UNAVAILABLE("BANK_SYSTEM_UNAVAILABLE", HttpStatus.SERVICE_UNAVAILABLE, "은행 시스템에 일시적인 장애가 발생했습니다."),
 
+    //Charge
+    INVALID_IDEMPOTENCY_KEY("INVALID_IDEMPOTENCY_KEY", HttpStatus.BAD_REQUEST, "멱등키가 없거나 형식이 올바르지 않습니다."),
+    IDEMPOTENCY_KEY_PROCESSING("IDEMPOTENCY_KEY_PROCESSING", HttpStatus.CONFLICT, "이전 요청이 처리 중입니다. 잠시 후 상태를 조회해주세요."),
+    IDEMPOTENCY_KEY_CONFLICT("IDEMPOTENCY_KEY_CONFLICT", HttpStatus.UNPROCESSABLE_CONTENT, "동일한 멱등키로 다른 요청은 처리할 수 없습니다."),
+    INVALID_CHARGE_AMOUNT("INVALID_CHARGE_AMOUNT", HttpStatus.BAD_REQUEST, "충전 금액은 1원 이상 2,000,000원 이하여야 합니다."),
+    INVALID_REMARK_LENGTH("INVALID_REMARK_LENGTH", HttpStatus.BAD_REQUEST, "거래 적요는 최소 1자, 최대 7자까지 입력할 수 있습니다."),
+    INVALID_TRANSFER_PIN("INVALID_TRANSFER_PIN", HttpStatus.UNAUTHORIZED, "송금 비밀번호를 확인해주세요."),
+    TRANSFER_PIN_LOCKED("TRANSFER_PIN_LOCKED", HttpStatus.LOCKED, "송금 비밀번호 5회 오류로 잠겼습니다."),
+    INVALID_SENDER_ACCOUNT("INVALID_SENDER_ACCOUNT", HttpStatus.BAD_REQUEST, "출금 계좌가 존재하지 않거나 거래할 수 없는 상태입니다."),
+    BANK_MAINTENANCE("BANK_MAINTENANCE", HttpStatus.BAD_REQUEST, "은행 점검 시간(00:00~00:30)에는 송금할 수 없습니다."),
+    WALLET_BALANCE_LIMIT_EXCEEDED("WALLET_BALANCE_LIMIT_EXCEEDED", HttpStatus.BAD_REQUEST, "페이머니 보유 한도(2,000,000원)를 초과할 수 없습니다."),
+
+    //Transaction
+    TRANSACTION_NOT_FOUND("TRANSACTION_NOT_FOUND", HttpStatus.NOT_FOUND, "거래를 찾을 수 없습니다."),
+
     //Internal Server Error
     INTERNAL_SERVER_ERROR("INTERNAL_SERVER_ERROR", HttpStatus.INTERNAL_SERVER_ERROR, "내부 서버 오류입니다.");
 
